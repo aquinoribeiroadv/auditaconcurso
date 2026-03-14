@@ -2702,85 +2702,12 @@ function getBanco()     { try { return JSON.parse(localStorage.getItem(BANCO_KEY
 function setBanco(v)    { localStorage.setItem(BANCO_KEY, JSON.stringify(v)); }
 function getContatos()  { try { return JSON.parse(localStorage.getItem(CONTATOS_KEY)||'{}'); } catch { return {}; } }
 function saveContatos(v){ localStorage.setItem(CONTATOS_KEY, JSON.stringify(v)); }
-function getPastas()    { return []; } // pastas são os próprios órgãos
+function getPastas()    { return []; }
 function setPastas()    {}
 function getGHToken()   { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
 function setGHToken(t)  { localStorage.setItem(GH_TOKEN_KEY, t); }
 
-// ── Auto-save (debounced) ──────────────────────────────────────
-let _autoSaveTimer = null;
-function autoSave() {
-  clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(() => _commitAuditoria(), 2000);
-}
-
-// ── GitHub API ─────────────────────────────────────────────────
-async function _ghRequest(method, path, body) {
-  const token = getGHToken();
-  if (!token) return null;
-  const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${path}`, {
-    method,
-    headers: {
-      'Authorization': `token ${token}`,
-      'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
-
-async function _ghGetSHA(path) {
-  try {
-    const r = await _ghRequest('GET', path);
-    return r?.sha || null;
-  } catch { return null; }
-}
-
-async function _ghPut(path, content, message) {
-  const sha = await _ghGetSHA(path);
-  const encoded = btoa(unescape(encodeURIComponent(content)));
-  return _ghRequest('PUT', path, {
-    message,
-    content: encoded,
-    branch: GH_BRANCH,
-    ...(sha ? { sha } : {}),
-  });
-}
-
-async function _ghDelete(path, message) {
-  const sha = await _ghGetSHA(path);
-  if (!sha) return; // arquivo não existe, nada a fazer
-  return _ghRequest('DELETE', path, { message, sha, branch: GH_BRANCH });
-}
-
-async function _ghDeletePasta(slug) {
-  if (!getGHToken() || !slug) return;
-  const pasta = `dados/${slug}`;
-  try {
-    const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
-    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}?ref=${GH_BRANCH}`, { headers });
-    if (!res.ok) return;
-    const arquivos = await res.json();
-    for (const arq of arquivos) {
-      await _ghDelete(`${pasta}/${arq.name}`, `Excluindo: ${arq.name}`);
-    }
-  } catch(e) { console.warn('_ghDeletePasta:', e); }
-}
-
-async function _ghPutBinary(path, base64content, message) {
-  const sha = await _ghGetSHA(path);
-  return _ghRequest('PUT', path, {
-    message,
-    content: base64content,
-    branch: GH_BRANCH,
-    ...(sha ? { sha } : {}),
-  });
-}
-
-// ── Slug do órgão para nome de pasta ──────────────────────────
-// Garante que state.arquivos sempre tem a estrutura correta
+// Garante estrutura correta de state.arquivos
 function _normArquivos() {
   if (!state.arquivos || typeof state.arquivos !== 'object') {
     state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
@@ -2789,6 +2716,7 @@ function _normArquivos() {
   return state.arquivos;
 }
 
+// Slug para nome de pasta no GitHub
 function orgaoSlug(orgao) {
   return (orgao || 'sem-orgao')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -2797,92 +2725,184 @@ function orgaoSlug(orgao) {
     .toLowerCase().substring(0, 40);
 }
 
-// ── Commit automático da auditoria no GitHub ──────────────────
-async function _commitAuditoria() {
-  if (!state.orgao || !getGHToken()) return;
+// ── Auto-save (debounced 3s) ──────────────────────────────────
+let _autoSaveTimer = null;
+function autoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => _commitAuditoria(), 3000);
+}
+
+// ── GitHub API ────────────────────────────────────────────────
+async function _ghReq(method, path, body) {
+  const token = getGHToken();
+  if (!token) return null;
   try {
-    const slug = orgaoSlug(state.orgao);
-    const pasta = `dados/${slug}`;
-
-    // 1. Salvar arquivos brutos primeiro (para que _ghSalvo fique true)
-    await _commitArquivos(pasta);
-
-    // 2. Salvar auditoria.json com TUDO incluindo arquivos
-    const registro = _buildRegistro();
-    await _ghPut(`${pasta}/auditoria.json`,
-      JSON.stringify(registro, null, 2),
-      `Auto-save: ${state.orgao} - ${new Date().toLocaleString('pt-BR')}`);
-
-    // 3. Atualizar banco local
-    _salvarBancoLocal(registro);
-
-    // 4. Atualizar banco.json global no repo
-    const banco = getBanco();
-    const resumos = banco.map(b => ({
-      id: b.id, orgao: b.orgao, slug: b.slug || orgaoSlug(b.orgao),
-      dataInicio: b.dataInicio, dataFim: b.dataFim,
-      salvoEm: b.salvoEm,
-      totalPreteridos: b.totalPreteridos,
-      totalIrregulares: b.totalIrregulares,
-    }));
-    await _ghPut('dados/banco.json', JSON.stringify(resumos, null, 2),
-      `Índice: ${new Date().toLocaleString('pt-BR')}`);
-
-    _mostrarStatusSync('✅ Salvo no GitHub');
-  } catch(e) {
-    console.warn('Auto-save GitHub:', e);
-    _mostrarStatusSync('⚠️ Salvo localmente');
-  }
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${path}`, {
+      method,
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github.v3+json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch { return null; }
 }
 
-async function _commitArquivos(pasta) {
-  const arq = state.arquivos || {};
-
-  if (arq.vagasConcurso && !arq.vagasConcurso._ghSalvo) {
-    const b64 = btoa(unescape(encodeURIComponent(arq.vagasConcurso.conteudo)));
-    await _ghPutBinary(`${pasta}/${arq.vagasConcurso.nome}`, b64, 'Arquivo: vagas concurso');
-    arq.vagasConcurso._ghSalvo = true;
-  }
-  if (arq.vagasLei && !arq.vagasLei._ghSalvo) {
-    const b64 = btoa(unescape(encodeURIComponent(arq.vagasLei.conteudo)));
-    await _ghPutBinary(`${pasta}/${arq.vagasLei.nome}`, b64, 'Arquivo: vagas lei');
-    arq.vagasLei._ghSalvo = true;
-  }
-  if (arq.resultado && !arq.resultado._ghSalvo) {
-    const b64 = btoa(unescape(encodeURIComponent(arq.resultado.conteudo)));
-    await _ghPutBinary(`${pasta}/${arq.resultado.nome}`, b64, 'Arquivo: resultado concurso');
-    arq.resultado._ghSalvo = true;
-  }
-  (arq.folhas || []).forEach(async f => {
-    if (!f._ghSalvo) {
-      const b64 = btoa(unescape(encodeURIComponent(f.conteudo)));
-      await _ghPutBinary(`${pasta}/${f.nome}`, b64, `Arquivo: folha ${f.ano}`);
-      f._ghSalvo = true;
-    }
-  });
+async function _ghSHA(path) {
+  const r = await _ghReq('GET', path);
+  return r?.sha || null;
 }
 
+async function _ghPut(path, textContent, message) {
+  const sha = await _ghSHA(path);
+  const encoded = btoa(unescape(encodeURIComponent(textContent)));
+  return _ghReq('PUT', path, { message, content: encoded, branch: GH_BRANCH, ...(sha ? { sha } : {}) });
+}
+
+async function _ghPutBinary(path, base64content, message) {
+  const sha = await _ghSHA(path);
+  return _ghReq('PUT', path, { message, content: base64content, branch: GH_BRANCH, ...(sha ? { sha } : {}) });
+}
+
+async function _ghDelete(path, message) {
+  const sha = await _ghSHA(path);
+  if (!sha) return;
+  return _ghReq('DELETE', path, { message, sha, branch: GH_BRANCH });
+}
+
+// ── Indicador de status ───────────────────────────────────────
 function _mostrarStatusSync(msg) {
   let el = document.getElementById('syncStatus');
   if (!el) {
     el = document.createElement('div');
     el.id = 'syncStatus';
-    el.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a3a1a;color:white;padding:6px 16px;border-radius:20px;font-size:0.72rem;font-weight:700;z-index:9999;transition:opacity 0.5s;';
+    el.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a3a1a;color:white;padding:6px 16px;border-radius:20px;font-size:0.72rem;font-weight:700;z-index:9999;opacity:1;transition:opacity 1s;pointer-events:none;';
     document.body.appendChild(el);
   }
   el.textContent = msg;
   el.style.opacity = '1';
-  clearTimeout(el._timer);
-  el._timer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 4000);
 }
 
-// ── Inicialização: carrega banco do GitHub ─────────────────────
+// ── Commit da auditoria no GitHub ─────────────────────────────
+// REGRA: auditoria.json NUNCA contém conteúdo bruto dos arquivos
+// Arquivos CSV ficam como arquivos separados na pasta do órgão
+async function _commitAuditoria() {
+  if (!state.orgao || !getGHToken()) return;
+  _mostrarStatusSync('⏳ Salvando...');
+  try {
+    const slug = orgaoSlug(state.orgao);
+    const pasta = `dados/${slug}`;
+
+    // 1. Fazer upload dos arquivos brutos (apenas os ainda não enviados)
+    await _uploadArquivos(pasta);
+
+    // 2. Montar registro SEM conteúdo bruto (só metadados dos arquivos)
+    const totalPret = (state.preteridosNominais||[]).reduce((s,p) => s + p.preteridos.length, 0);
+    const totalIrr  = (state.preteridosNominais||[]).reduce((s,p) => s + p.nIrregulares, 0);
+    const bancoLocal = getBanco();
+    const idxExist = bancoLocal.findIndex(b => b.orgao === state.orgao && b.dataInicio === state.dataInicio?.toISOString());
+    const id = idxExist >= 0 ? bancoLocal[idxExist].id : (state._auditoriaId || (state._auditoriaId = Date.now()));
+
+    // Metadados dos arquivos (só nome e ano, sem conteúdo)
+    const arq = state.arquivos || {};
+    const arquivosMeta = {
+      vagasConcurso: arq.vagasConcurso ? { nome: arq.vagasConcurso.nome } : null,
+      vagasLei:      arq.vagasLei      ? { nome: arq.vagasLei.nome }      : null,
+      resultado:     arq.resultado     ? { nome: arq.resultado.nome }     : null,
+      folhas:        (arq.folhas||[]).map(f => ({ ano: f.ano, nome: f.nome })),
+    };
+
+    const registro = {
+      id, slug,
+      orgao:              state.orgao,
+      dataInicio:         state.dataInicio?.toISOString(),
+      dataFim:            state.dataFim?.toISOString(),
+      salvoEm:            new Date().toISOString(),
+      totalCargos:        (state.preteridosNominais||[]).length,
+      totalIrregulares:   totalIrr,
+      totalPreteridos:    totalPret,
+      vagasConcurso:      state.vagasConcurso  || [],
+      vagasLei:           state.vagasLei        || [],
+      correspondencia:    state.correspondencia || {},
+      correspondenciaSem: state.correspondenciaSem || {},
+      analiseVagas:       state.analiseVagas    || [],
+      preteridosNominais: state.preteridosNominais || [],
+      resultadoConcurso:  state.resultadoConcurso  || [],
+      indicios:           state.indicios        || [],
+      contatos:           getContatos(),
+      arquivosMeta,       // só metadados, sem conteúdo
+    };
+
+    // 3. Salvar auditoria.json (pequeno, sem CSVs)
+    await _ghPut(`${pasta}/auditoria.json`,
+      JSON.stringify(registro, null, 2),
+      `Auto-save: ${state.orgao} ${new Date().toLocaleString('pt-BR')}`);
+
+    // 4. Atualizar banco local
+    if (idxExist >= 0) bancoLocal[idxExist] = registro;
+    else bancoLocal.unshift(registro);
+    setBanco(bancoLocal);
+
+    // 5. Atualizar índice global banco.json
+    const resumos = bancoLocal.map(b => ({
+      id: b.id, orgao: b.orgao, slug: b.slug || orgaoSlug(b.orgao),
+      dataInicio: b.dataInicio, dataFim: b.dataFim, salvoEm: b.salvoEm,
+      totalPreteridos: b.totalPreteridos, totalIrregulares: b.totalIrregulares,
+    }));
+    await _ghPut('dados/banco.json', JSON.stringify(resumos, null, 2),
+      `Índice: ${new Date().toLocaleString('pt-BR')}`);
+
+    _mostrarStatusSync('✅ Salvo no GitHub');
+    renderHub();
+  } catch(e) {
+    console.warn('_commitAuditoria:', e);
+    _mostrarStatusSync('⚠️ Erro ao salvar: ' + e.message);
+  }
+}
+
+// Upload apenas dos arquivos ainda não enviados
+async function _uploadArquivos(pasta) {
+  const arq = _normArquivos();
+
+  async function upload(nome, conteudo, label) {
+    if (!conteudo) return;
+    try {
+      const b64 = btoa(unescape(encodeURIComponent(conteudo)));
+      await _ghPutBinary(`${pasta}/${nome}`, b64, `Upload: ${label}`);
+      return true;
+    } catch { return false; }
+  }
+
+  if (arq.vagasConcurso && !arq.vagasConcurso._ghSalvo) {
+    if (await upload(arq.vagasConcurso.nome, arq.vagasConcurso.conteudo, 'vagas concurso'))
+      arq.vagasConcurso._ghSalvo = true;
+  }
+  if (arq.vagasLei && !arq.vagasLei._ghSalvo) {
+    if (await upload(arq.vagasLei.nome, arq.vagasLei.conteudo, 'vagas lei'))
+      arq.vagasLei._ghSalvo = true;
+  }
+  if (arq.resultado && !arq.resultado._ghSalvo) {
+    if (await upload(arq.resultado.nome, arq.resultado.conteudo, 'resultado'))
+      arq.resultado._ghSalvo = true;
+  }
+  for (const f of (arq.folhas||[])) {
+    if (!f._ghSalvo) {
+      if (await upload(f.nome, f.conteudo, `folha ${f.ano}`))
+        f._ghSalvo = true;
+    }
+  }
+}
+
+// ── Inicialização: sincroniza banco do GitHub ─────────────────
 async function _inicializarDados() {
   if (!getGHToken()) return;
   try {
     const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
-
-    // Carregar índice do GitHub
     const res = await fetch(
       `https://api.github.com/repos/${GH_REPO}/contents/dados/banco.json?ref=${GH_BRANCH}&t=${Date.now()}`,
       { headers }
@@ -2891,7 +2911,7 @@ async function _inicializarDados() {
     const data = await res.json();
     const resumos = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
 
-    // Para cada resumo no GitHub, carregar auditoria.json completa
+    // Carregar cada auditoria.json (são pequenos agora)
     const bancoAtualizado = [];
     for (const r of resumos) {
       try {
@@ -2901,337 +2921,158 @@ async function _inicializarDados() {
         );
         if (ar.ok) {
           const ad = await ar.json();
-          const auditoria = JSON.parse(decodeURIComponent(escape(atob(ad.content.replace(/\n/g,'')))));
-          // Garantir slug
-          auditoria.slug = auditoria.slug || r.slug || orgaoSlug(auditoria.orgao);
-          bancoAtualizado.push(auditoria);
+          const aud = JSON.parse(decodeURIComponent(escape(atob(ad.content.replace(/\n/g,'')))));
+          aud.slug = aud.slug || r.slug;
+          bancoAtualizado.push(aud);
         } else {
-          // Usar resumo se auditoria.json não encontrada
           bancoAtualizado.push(r);
         }
       } catch { bancoAtualizado.push(r); }
     }
-
     if (bancoAtualizado.length) {
-      setBanco(bancoAtualizado.sort((a, b) => b.id - a.id));
+      setBanco(bancoAtualizado.sort((a,b) => b.id - a.id));
       renderHub();
-      _mostrarStatusSync(`☁️ ${bancoAtualizado.length} auditoria${bancoAtualizado.length !== 1 ? 's' : ''} sincronizada${bancoAtualizado.length !== 1 ? 's' : ''}`);
+      _mostrarStatusSync(`☁️ ${bancoAtualizado.length} auditoria${bancoAtualizado.length !== 1 ? 's' : ''} carregada${bancoAtualizado.length !== 1 ? 's' : ''}`);
     }
-  } catch(e) { console.warn('Init GitHub:', e); }
+  } catch(e) { console.warn('_inicializarDados:', e); }
 }
 
-// ── Build registro completo ────────────────────────────────────
-function _buildRegistro() {
-  const totalPret = (state.preteridosNominais||[]).reduce((s,p) => s + p.preteridos.length, 0);
-  const totalIrr  = (state.preteridosNominais||[]).reduce((s,p) => s + p.nIrregulares, 0);
-  const slug = orgaoSlug(state.orgao);
-  const idxExist = getBanco().findIndex(b => b.orgao === state.orgao && b.dataInicio === state.dataInicio?.toISOString());
-  const id = idxExist >= 0 ? getBanco()[idxExist].id : (state._auditoriaId || (state._auditoriaId = Date.now()));
-  return {
-    id, slug,
-    orgao: state.orgao,
-    dataInicio: state.dataInicio?.toISOString(),
-    dataFim: state.dataFim?.toISOString(),
-    salvoEm: new Date().toISOString(),
-    totalCargos: (state.preteridosNominais||[]).length,
-    totalIrregulares: totalIrr,
-    totalPreteridos: totalPret,
-    vagasConcurso: state.vagasConcurso || [],
-    vagasLei: state.vagasLei || [],
-    correspondencia: state.correspondencia || {},
-    analiseVagas: state.analiseVagas || [],
-    preteridosNominais: state.preteridosNominais || [],
-    resultadoConcurso: state.resultadoConcurso || [],
-    indicios: state.indicios || [],
-    contatos: getContatos(),
-    arquivos: state.arquivos || {},
-  };
+// ── Buscar arquivos CSV do GitHub para uma auditoria ──────────
+// Usa download_url (funciona para arquivos grandes, repo público)
+async function _buscarArquivosGH(slug, arquivosMeta) {
+  if (!slug) return {};
+  const pasta = `dados/${slug}`;
+  const resultado = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+
+  try {
+    const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}?ref=${GH_BRANCH}`, { headers });
+    if (!res.ok) return resultado;
+    const listaArquivos = await res.json();
+
+    async function baixarArquivo(nome) {
+      // Usar download_url para evitar limite de 1MB da contents API
+      const arqInfo = listaArquivos.find(a => a.name === nome);
+      if (!arqInfo) return null;
+      try {
+        // Raw URL funciona para repos públicos sem auth
+        const rawUrl = `https://raw.githubusercontent.com/${GH_REPO}/${GH_BRANCH}/${pasta}/${encodeURIComponent(nome)}`;
+        const r = await fetch(rawUrl);
+        if (r.ok) return await r.text();
+        // Fallback: contents API com base64
+        if (arqInfo.download_url) {
+          const r2 = await fetch(arqInfo.download_url);
+          if (r2.ok) return await r2.text();
+        }
+        return null;
+      } catch { return null; }
+    }
+
+    // Baixar arquivos baseado nos metadados salvos
+    const meta = arquivosMeta || {};
+
+    if (meta.vagasConcurso?.nome) {
+      const c = await baixarArquivo(meta.vagasConcurso.nome);
+      if (c) resultado.vagasConcurso = { nome: meta.vagasConcurso.nome, conteudo: c, _ghSalvo: true };
+    }
+    if (meta.vagasLei?.nome) {
+      const c = await baixarArquivo(meta.vagasLei.nome);
+      if (c) resultado.vagasLei = { nome: meta.vagasLei.nome, conteudo: c, _ghSalvo: true };
+    }
+    if (meta.resultado?.nome) {
+      const c = await baixarArquivo(meta.resultado.nome);
+      if (c) resultado.resultado = { nome: meta.resultado.nome, conteudo: c, _ghSalvo: true };
+    }
+    for (const fm of (meta.folhas||[])) {
+      const c = await baixarArquivo(fm.nome);
+      if (c) resultado.folhas.push({ ano: fm.ano, nome: fm.nome, conteudo: c, _ghSalvo: true });
+    }
+  } catch(e) { console.warn('_buscarArquivosGH:', e); }
+
+  return resultado;
 }
 
-function _salvarBancoLocal(registro) {
-  const banco = getBanco();
-  const idx = banco.findIndex(b => b.id === registro.id);
-  if (idx >= 0) banco[idx] = registro;
-  else banco.unshift(registro);
-  setBanco(banco);
-}
-
-// ── Compatibilidade ───────────────────────────────────────────
-function salvarResultado() { _commitAuditoria(); }
-function salvarEExportar() { _commitAuditoria(); }
-function salvarApp()       { _commitAuditoria(); }
-function exportarDados()   { _commitAuditoria(); }
-function importarDados()   {}
-function _gerarHTMLComDados() {}
-
-
-
-function toggleBanco() {
-  const painel = document.getElementById('bancoPainel');
-  const visivel = painel.style.display === 'flex';
-  if (visivel) {
-    painel.style.display = 'none';
-  } else {
-    painel.style.display = 'flex';
-    _hubPastaAtual = null;
-    renderHub();
-  }
-}
-
-// ===================== HUB COM PASTAS =====================
-let _hubPastaAtual = null; // null = raiz
-
-
-function renderHub() {
-  const banco = getBanco();
-  const pastas = getPastas();
-  const conteudo = document.getElementById('hubConteudo');
-  const vazio = document.getElementById('bancoVazio');
-  const caminho = document.getElementById('hubCaminho');
-
-  // Atualizar caminho
-  if (_hubPastaAtual) {
-    const pasta = pastas.find(p => p.id === _hubPastaAtual);
-    caminho.innerHTML = `<span onclick="_hubPastaAtual=null;renderHub()" style="cursor:pointer;color:#7ec87e;">📂 Raiz</span> › 📁 ${pasta ? pasta.nome : '?'}`;
-  } else {
-    caminho.textContent = '📂 Raiz';
-  }
-
-  // Pastas neste nível
-  const pastasFiltradas = pastas.filter(p => (p.pai || null) === _hubPastaAtual);
-  // Auditorias neste nível
-  const auditoriasFiltradas = banco.filter(b => (b.pasta || null) === _hubPastaAtual);
-
-  const total = pastasFiltradas.length + auditoriasFiltradas.length;
-  if (!total) { vazio.style.display = 'block'; conteudo.innerHTML = ''; return; }
-  vazio.style.display = 'none';
-
-  let html = '';
-
-  // Renderizar pastas
-  pastasFiltradas.forEach(p => {
-    const nAud = banco.filter(b => b.pasta === p.id).length;
-    html += `
-    <div style="background:#2a2a2a;border:1px solid #3a3a3a;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
-      <div onclick="_hubPastaAtual='${p.id}';renderHub()" style="flex:1;cursor:pointer;">
-        <div style="font-size:1.2rem;display:inline;margin-right:8px;">📁</div>
-        <span style="font-weight:700;font-size:0.88rem;color:#e0e0e0;">${p.nome}</span>
-        <div style="font-size:0.68rem;color:#666;margin-top:3px;">${nAud} auditoria${nAud!==1?'s':''}</div>
-      </div>
-      <button onclick="excluirPasta('${p.id}')" style="background:#2a1a1a;border:none;color:#dc2626;border-radius:6px;padding:6px 10px;font-size:0.72rem;cursor:pointer;">🗑️</button>
-    </div>`;
-  });
-
-  // Renderizar auditorias
-  auditoriasFiltradas.forEach(b => {
-    const dataInicio = b.dataInicio ? new Date(b.dataInicio) : null;
-    const dataFim    = b.dataFim    ? new Date(b.dataFim)    : null;
-    const salvoEm    = new Date(b.salvoEm);
-    const periodo    = dataInicio ? `${formatDate(dataInicio)} a ${formatDate(dataFim)}` : '';
-    const temPret    = b.totalPreteridos > 0;
-
-    // Pastas disponíveis para mover (exceto a atual)
-    const pastasDisp = pastas.filter(p => p.id !== _hubPastaAtual);
-    const moverOpts  = pastasDisp.length
-      ? pastasDisp.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')
-      : '';
-
-    html += `
-    <div style="background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div style="flex:1;" onclick="carregarResultado(${b.id})" style="cursor:pointer;">
-          <div style="font-weight:800;font-size:0.88rem;color:#1a3a1a;cursor:pointer;">${b.orgao}</div>
-          <div style="font-size:0.68rem;color:#666;margin-top:2px;">${periodo}</div>
-          <div style="margin-top:5px;">
-            <span style="font-size:0.75rem;font-weight:700;color:${temPret?'#dc2626':'#16a34a'};">
-              ${temPret ? `🚨 ${b.totalPreteridos} preterido${b.totalPreteridos!==1?'s':''}` : '✅ Sem preterição'}
-            </span>
-          </div>
-          <div style="font-size:0.62rem;color:#aaa;margin-top:2px;">Salvo em ${salvoEm.toLocaleDateString('pt-BR')} ${salvoEm.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
-          <button onclick="carregarResultado(${b.id})" style="background:#1a3a1a;border:none;color:white;border-radius:6px;padding:7px 12px;font-size:0.72rem;font-weight:800;cursor:pointer;">Ver</button>
-          ${moverOpts ? `<select onchange="moverAuditoria(${b.id},this.value)" style="font-size:0.65rem;border-radius:6px;border:1px solid #ddd;padding:4px;background:white;color:#333;"><option value="">📁 Mover</option>${moverOpts}</select>` : ''}
-          <button onclick="excluirResultado(${b.id})" style="background:#fee2e2;border:none;color:#dc2626;border-radius:6px;padding:7px 12px;font-size:0.72rem;cursor:pointer;">🗑️</button>
-        </div>
-      </div>
-    </div>`;
-  });
-
-  conteudo.innerHTML = html;
-}
-
-function criarPasta() {
-  const nome = prompt('Nome da pasta:');
-  if (!nome || !nome.trim()) return;
-  const pastas = getPastas();
-  pastas.push({ id: Date.now().toString(), nome: nome.trim(), pai: _hubPastaAtual });
-  setPastas(pastas);
-  renderHub();
-}
-
-function excluirPasta(id) {
-  if (!confirm('Excluir esta pasta? As auditorias dentro serão movidas para a raiz.')) return;
-  // Mover auditorias para raiz
-  const banco = getBanco();
-  banco.forEach(b => { if (b.pasta === id) b.pasta = null; });
-  setBanco(banco);
-  // Remover pasta
-  const pastas = getPastas().filter(p => p.id !== id && p.pai !== id);
-  setPastas(pastas);
-  renderHub();
-}
-
-function moverAuditoria(id, pastaId) {
-  const banco = getBanco();
-  const idx = banco.findIndex(b => b.id === id);
-  if (idx >= 0) { banco[idx].pasta = pastaId || null; setBanco(banco); renderHub(); }
-}
-
-function renderBanco() { renderHub(); } // compatibilidade
-
+// ── Excluir auditoria ─────────────────────────────────────────
 async function excluirResultado(id) {
   const banco = getBanco();
   const reg = banco.find(b => b.id === id);
-  const slug = reg?.slug || (reg ? orgaoSlug(reg.orgao) : null);
-
-  // Remover do banco local
   setBanco(banco.filter(b => b.id !== id));
   renderHub();
 
-  // Remover do GitHub
-  if (slug && getGHToken()) {
+  if (reg?.slug && getGHToken()) {
     _mostrarStatusSync('🗑️ Excluindo do GitHub...');
-    await _ghDeletePasta(slug);
-    // Atualizar banco.json no GitHub
-    const bancoAtualizado = getBanco();
-    const resumos = bancoAtualizado.map(b => ({
+    const pasta = `dados/${reg.slug}`;
+    try {
+      const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
+      const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}?ref=${GH_BRANCH}`, { headers });
+      if (res.ok) {
+        const arquivos = await res.json();
+        for (const arq of arquivos) {
+          await _ghDelete(`${pasta}/${arq.name}`, `Excluindo: ${arq.name}`);
+        }
+      }
+    } catch(e) { console.warn('excluir:', e); }
+    // Atualizar banco.json
+    const resumos = getBanco().map(b => ({
       id: b.id, orgao: b.orgao, slug: b.slug || orgaoSlug(b.orgao),
-      dataInicio: b.dataInicio, dataFim: b.dataFim,
-      salvoEm: b.salvoEm, totalPreteridos: b.totalPreteridos, totalIrregulares: b.totalIrregulares,
+      dataInicio: b.dataInicio, dataFim: b.dataFim, salvoEm: b.salvoEm,
+      totalPreteridos: b.totalPreteridos, totalIrregulares: b.totalIrregulares,
     }));
     await _ghPut('dados/banco.json', JSON.stringify(resumos, null, 2), 'Índice: auditoria excluída');
-    _mostrarStatusSync('✅ Excluído do GitHub');
-  } else {
-    showToast('🗑️ Resultado excluído.');
+    _mostrarStatusSync('✅ Excluído');
   }
 }
 
+// ── Carregar auditoria salva ──────────────────────────────────
 async function carregarResultado(id) {
   const banco = getBanco();
-  let reg = banco.find(b => b.id === id);
-  if (!reg) { showToast('❌ Resultado não encontrado.'); return; }
+  const reg = banco.find(b => b.id === id);
+  if (!reg) { showToast('❌ Não encontrado.'); return; }
 
   document.getElementById('bancoPainel').style.display = 'none';
-  _mostrarStatusSync('⏳ Carregando...');
+  _mostrarStatusSync('⏳ Carregando arquivos do GitHub...');
 
-  // Buscar auditoria completa + arquivos do GitHub se necessário
-  if (getGHToken() && reg.slug && (!reg.arquivos || !reg.arquivos.folhas || !reg.arquivos.folhas.length)) {
-    try {
-      const res = await fetch(
-        `https://api.github.com/repos/${GH_REPO}/contents/dados/${reg.slug}/auditoria.json?ref=${GH_BRANCH}&t=${Date.now()}`,
-        { headers: { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const full = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
-        reg = { ...reg, ...full };
-        reg.arquivos = reg.arquivos || { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
-        await _buscarArquivosGH(reg);
-        const bancoAtual = getBanco();
-        const idx = bancoAtual.findIndex(b => b.id === id);
-        if (idx >= 0) { bancoAtual[idx] = reg; setBanco(bancoAtual); }
-      }
-    } catch(e) { console.warn('Erro ao buscar GH:', e); }
-  }
+  // Buscar arquivos CSV do GitHub (usando raw URLs, sem limite de tamanho)
+  const arquivos = await _buscarArquivosGH(reg.slug || orgaoSlug(reg.orgao), reg.arquivosMeta);
 
-  state._auditoriaId       = reg.id;
-  state.orgao              = reg.orgao;
-  state.dataInicio         = new Date(reg.dataInicio);
-  state.dataFim            = new Date(reg.dataFim);
-  state.vagasConcurso      = reg.vagasConcurso || [];
-  state.vagasLei           = reg.vagasLei || [];
-  state.correspondencia    = reg.correspondencia || {};
-  state.correspondenciaSem = reg.correspondenciaSem || {};
-  state.analiseVagas       = reg.analiseVagas || [];
-  state.preteridosNominais = reg.preteridosNominais || [];
-  state.resultadoConcurso  = reg.resultadoConcurso || [];
-  state.arquivos           = reg.arquivos || {}; _normArquivos();
-  state.indicios           = reg.indicios || [];
+  // Restaurar state completo
+  state._auditoriaId      = reg.id;
+  state.orgao             = reg.orgao;
+  state.dataInicio        = new Date(reg.dataInicio);
+  state.dataFim           = new Date(reg.dataFim);
+  state.vagasConcurso     = reg.vagasConcurso     || [];
+  state.vagasLei          = reg.vagasLei           || [];
+  state.correspondencia   = reg.correspondencia    || {};
+  state.correspondenciaSem= reg.correspondenciaSem || {};
+  state.analiseVagas      = reg.analiseVagas       || [];
+  state.preteridosNominais= reg.preteridosNominais || [];
+  state.resultadoConcurso = reg.resultadoConcurso  || [];
+  state.indicios          = reg.indicios           || [];
+  state.arquivos          = arquivos;
   if (reg.contatos) saveContatos(reg.contatos);
 
+  // Restaurar folhas a partir dos conteúdos baixados
   state.folhas = [];
   state.anosCarregados = {};
   state.anosNecessarios = [];
-  if (state.arquivos.folhas && state.arquivos.folhas.length) {
-    state.arquivos.folhas.forEach(f => {
-      try {
-        const rows = parseCSV(f.conteudo);
-        state.folhas.push(...rows);
-        state.anosCarregados[f.ano] = true;
-        if (!state.anosNecessarios.includes(f.ano)) state.anosNecessarios.push(f.ano);
-      } catch(e) {}
-    });
+  for (const f of (arquivos.folhas||[])) {
+    try {
+      const rows = parseCSV(f.conteudo);
+      state.folhas.push(...rows);
+      state.anosCarregados[f.ano] = true;
+      if (!state.anosNecessarios.includes(f.ano)) state.anosNecessarios.push(f.ano);
+    } catch(e) { console.warn('parseCSV folha:', e); }
+  }
+  if (state.folhas.length) {
     state.cargosEIPFolha = [...new Set(
       state.folhas.filter(r => r.tipo_cargo !== 'Efetivos').map(r => (r.descricao_cargo||'').trim())
     )].filter(Boolean).sort();
   }
 
-  const elOrgao = document.getElementById('orgao');
-  if (elOrgao) elOrgao.value = state.orgao;
-  const elInicio = document.getElementById('dataInicio');
-  if (elInicio) elInicio.value = state.dataInicio.toISOString().slice(0,10);
-  const hoje_ = new Date(); hoje_.setHours(0,0,0,0);
-  const dataFimD = new Date(state.dataFim); dataFimD.setHours(0,0,0,0);
-  const aindaValido = dataFimD.getTime() === hoje_.getTime();
-  const chk = document.getElementById('concursoValido');
-  if (chk) { chk.checked = aindaValido; toggleConcursoValido(); }
-  const elFim = document.getElementById('dataFim');
-  if (elFim && !aindaValido) { elFim.disabled = false; elFim.value = state.dataFim.toISOString().slice(0,10); }
+  // Re-renderizar todas as etapas
+  _restaurarUI(reg, arquivos);
 
-  const arq = state.arquivos;
-  const z1 = document.getElementById('zone1');
-  if (z1 && arq.vagasConcurso) { z1.classList.add('loaded'); z1.querySelector('.upload-icon').textContent='✅'; z1.querySelector('.upload-label').textContent=arq.vagasConcurso.nome; z1.querySelector('.upload-hint').textContent=`${state.vagasConcurso.length} cargos`; }
-  const z2 = document.getElementById('zone2');
-  if (z2 && arq.vagasLei) { z2.classList.add('loaded'); z2.querySelector('.upload-icon').textContent='✅'; z2.querySelector('.upload-label').textContent=arq.vagasLei.nome; z2.querySelector('.upload-hint').textContent=`${state.vagasLei.length} cargos`; }
-  if (state.vagasConcurso.length && state.vagasLei.length) renderPreviewConcurso();
-
-  if (state.anosNecessarios.length) {
-    renderEtapa3Folhas();
-    state.arquivos.folhas.forEach(f => {
-      const zone = document.getElementById('zoneFolha' + f.ano);
-      if (zone) { zone.classList.add('loaded'); zone.querySelector('.upload-icon').textContent='✅'; zone.querySelector('.upload-label').textContent=f.nome; zone.querySelector('.upload-hint').textContent=`${state.folhas.filter(r=>Math.floor(parseInt(r.ano_mes)/100)===f.ano).length} registros`; }
-      const chip = document.getElementById('anoChip' + f.ano);
-      if (chip) { chip.classList.remove('needed'); chip.classList.add('loaded'); chip.textContent='✅ '+f.ano; }
-    });
-    const btnF = document.getElementById('btnEtapa3Folhas');
-    if (btnF) btnF.disabled = false;
-  }
-
-  state.cargoAtualIndex = 0;
-  renderEtapa4Correspondencia();
-  processarIndicios();
-  renderEtapa5Indicios();
-
-  const anoMesFim = state.dataFim.getFullYear() * 100 + (state.dataFim.getMonth() + 1);
-  let ultimoMes = 0;
-  state.folhas.forEach(r => { const am = parseInt(r.ano_mes); if (am <= anoMesFim && am > ultimoMes) ultimoMes = am; });
-  state.ultimoMesValido = ultimoMes;
-  const elUltimoMes = document.getElementById('infoUltimoMes');
-  if (elUltimoMes) elUltimoMes.textContent = `Base de cálculo: ${String(ultimoMes%100).padStart(2,'0')}/${Math.floor(ultimoMes/100)} (último mês dentro da validade).`;
-  renderEtapa6Vagas();
-
-  const zr = document.getElementById('zoneResultado');
-  if (zr && arq.resultado) { zr.classList.add('loaded'); zr.querySelector('.upload-icon').textContent='✅'; zr.querySelector('.upload-label').textContent=arq.resultado.nome; zr.querySelector('.upload-hint').textContent=`${state.resultadoConcurso.length} candidatos`; }
-  if (state.resultadoConcurso.length) {
-    const cargosUnicos = new Set(state.resultadoConcurso.map(r => r.codigoCargo)).size;
-    const aprovados = state.resultadoConcurso.filter(r => r.status && r.status.toUpperCase().includes('APROVAD')).length;
-    const el = document.getElementById('summaryResultado');
-    if (el) el.innerHTML = `<div class="summary-box"><div class="summary-num">${cargosUnicos}</div><div class="summary-lbl">Cargos</div></div><div class="summary-box"><div class="summary-num">${state.resultadoConcurso.length}</div><div class="summary-lbl">Candidatos</div></div><div class="summary-box"><div class="summary-num">${aprovados}</div><div class="summary-lbl">Aprovados</div></div>`;
-    const btnPret = document.getElementById('btnIdentificarPreteridos');
-    if (btnPret) btnPret.disabled = false;
-  }
-
+  // Ir para etapa 8
   state.stepLiberado = 8;
   for (let i = 1; i <= 8; i++) liberarStep(i);
   goStep(8);
@@ -3239,148 +3080,101 @@ async function carregarResultado(id) {
   _mostrarStatusSync(`✅ ${reg.orgao} carregado`);
 }
 
-async function _buscarArquivosGH(reg) {
-  if (!getGHToken() || !reg.slug) return;
-  const pasta = `dados/${reg.slug}`;
-  const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
+function _restaurarUI(reg, arquivos) {
+  // Etapa 1
+  const elOrgao = document.getElementById('orgao');
+  if (elOrgao) elOrgao.value = reg.orgao;
+  const elInicio = document.getElementById('dataInicio');
+  if (elInicio) elInicio.value = new Date(reg.dataInicio).toISOString().slice(0,10);
+  const hoje_ = new Date(); hoje_.setHours(0,0,0,0);
+  const dataFimD = new Date(reg.dataFim); dataFimD.setHours(0,0,0,0);
+  const aindaValido = dataFimD.getTime() === hoje_.getTime();
+  const chk = document.getElementById('concursoValido');
+  if (chk) { chk.checked = aindaValido; toggleConcursoValido(); }
+  const elFim = document.getElementById('dataFim');
+  if (elFim && !aindaValido) { elFim.disabled = false; elFim.value = new Date(reg.dataFim).toISOString().slice(0,10); }
 
-  async function fetchConteudo(nome) {
-    try {
-      const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}/${encodeURIComponent(nome)}?ref=${GH_BRANCH}`, { headers });
-      if (!res.ok) return null;
-      const data = await res.json();
-      return decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
-    } catch { return null; }
+  // Etapa 2 — zonas de upload
+  const z1 = document.getElementById('zone1');
+  if (z1 && arquivos.vagasConcurso) {
+    z1.classList.add('loaded');
+    z1.querySelector('.upload-icon').textContent = '✅';
+    z1.querySelector('.upload-label').textContent = arquivos.vagasConcurso.nome;
+    z1.querySelector('.upload-hint').textContent = `${state.vagasConcurso.length} cargos`;
   }
+  const z2 = document.getElementById('zone2');
+  if (z2 && arquivos.vagasLei) {
+    z2.classList.add('loaded');
+    z2.querySelector('.upload-icon').textContent = '✅';
+    z2.querySelector('.upload-label').textContent = arquivos.vagasLei.nome;
+    z2.querySelector('.upload-hint').textContent = `${state.vagasLei.length} cargos`;
+  }
+  if (state.vagasConcurso.length && state.vagasLei.length) renderPreviewConcurso();
 
-  try {
-    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}?ref=${GH_BRANCH}`, { headers });
-    if (!res.ok) return;
-    const arquivos = await res.json();
-    reg.arquivos = reg.arquivos || { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
-    for (const arq of arquivos) {
-      const nome = arq.name;
-      if (nome === 'auditoria.json') continue;
-      const conteudo = await fetchConteudo(nome);
-      if (!conteudo) continue;
-      if (/vagasCargo[Cc]oncurso/i.test(nome)) {
-        reg.arquivos.vagasConcurso = { nome, conteudo, _ghSalvo: true };
-      } else if (/CriadasPorLei|criadaspor/i.test(nome)) {
-        reg.arquivos.vagasLei = { nome, conteudo, _ghSalvo: true };
-      } else if (/resultado/i.test(nome) && nome.endsWith('.csv')) {
-        reg.arquivos.resultado = { nome, conteudo, _ghSalvo: true };
-      } else if (/servidores|folha/i.test(nome) && nome.endsWith('.csv')) {
-        const m = nome.match(/(\d{4})/);
-        const ano = m ? parseInt(m[1]) : 0;
-        if (!reg.arquivos.folhas) reg.arquivos.folhas = [];
-        const ei = reg.arquivos.folhas.findIndex(f => f.ano === ano);
-        if (ei >= 0) reg.arquivos.folhas[ei] = { ano, nome, conteudo, _ghSalvo: true };
-        else reg.arquivos.folhas.push({ ano, nome, conteudo, _ghSalvo: true });
+  // Etapa 3 — folhas
+  if (state.anosNecessarios.length) {
+    renderEtapa3Folhas();
+    for (const f of (arquivos.folhas||[])) {
+      const zone = document.getElementById('zoneFolha' + f.ano);
+      if (zone) {
+        zone.classList.add('loaded');
+        zone.querySelector('.upload-icon').textContent = '✅';
+        zone.querySelector('.upload-label').textContent = f.nome;
+        const n = state.folhas.filter(r => Math.floor(parseInt(r.ano_mes)/100) === f.ano).length;
+        zone.querySelector('.upload-hint').textContent = `${n} registros`;
       }
+      const chip = document.getElementById('anoChip' + f.ano);
+      if (chip) { chip.classList.remove('needed'); chip.classList.add('loaded'); chip.textContent = '✅ ' + f.ano; }
     }
-  } catch(e) { console.warn('_buscarArquivosGH:', e); }
-}
-
-
-
-function novoAuditoria() {
-  document.getElementById('bancoPainel').style.display = 'none';
-  // Reset state
-  Object.keys(state).forEach(k => {
-    if (Array.isArray(state[k])) state[k] = [];
-    else if (typeof state[k] === 'object' && state[k] !== null && !(state[k] instanceof Date)) state[k] = {};
-    else state[k] = null;
-  });
-  // Restaurar estrutura correta de arquivos
-  state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
-  // Reset steps
-  document.querySelectorAll('.step-item').forEach((s,i) => {
-    s.className = 'step-item' + (i === 0 ? ' active' : ' locked');
-  });
-  goStep(1);
-  showToast('🆕 Nova auditoria iniciada!');
-}
-
-let _modalKey = null;
-
-function abrirModalPreterido(mapKey) {
-  const pret = _preteridosMap.get(mapKey);
-  if (!pret) return;
-  _modalKey = `${state.orgao}||${mapKey}`;
-
-  document.getElementById('modalNome').textContent = pret.nome || '—';
-  document.getElementById('modalCargo').textContent = pret.cargo || '—';
-  document.getElementById('modalColocacao').textContent = `${pret.colocacao}º colocado`;
-  document.getElementById('modalNota').textContent = pret.notaFinal ?? '—';
-  document.getElementById('modalStatus').textContent = pret.status || '—';
-  const cpfVal = pret.cpf && !pret.cpf.startsWith('000') && pret.cpf !== '' ? pret.cpf : '(não disponível)';
-  document.getElementById('modalCpf').textContent = cpfVal;
-  const nascVal = pret.dataNasc && !pret.dataNasc.includes('1000') && pret.dataNasc !== '' ? pret.dataNasc : '(não disponível)';
-  document.getElementById('modalNasc').textContent = nascVal;
-  document.getElementById('modalInscricao').textContent = pret.inscricao || '—';
-
-  // Carregar contato salvo
-  const contatos = getContatos();
-  const salvo = contatos[_modalKey] || {};
-  document.getElementById('modalDdd').value = salvo.ddd || '';
-  document.getElementById('modalCelular').value = salvo.celular || '';
-  document.getElementById('modalAnotacoes').value = salvo.anotacoes || '';
-
-  document.getElementById('modalPreterido').style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function copiarCpf() {
-  const cpf = document.getElementById('modalCpf').textContent;
-  if (!cpf || cpf === '—') { showToast('⚠️ CPF não disponível'); return; }
-  navigator.clipboard.writeText(cpf).then(() => showToast('📋 CPF copiado!')).catch(() => {
-    const el = document.createElement('textarea');
-    el.value = cpf; document.body.appendChild(el);
-    el.select(); document.execCommand('copy'); document.body.removeChild(el);
-    showToast('📋 CPF copiado!');
-  });
-}
-
-function fecharModal() {
-  document.getElementById('modalPreterido').style.display = 'none';
-  document.body.style.overflow = '';
-  _modalKey = null;
-}
-
-function salvarContato() {
-  if (!_modalKey) return;
-  const ddd = document.getElementById('modalDdd').value.trim();
-  const celular = document.getElementById('modalCelular').value.trim();
-  const anotacoes = document.getElementById('modalAnotacoes').value.trim();
-
-  if (celular && celular.length !== 9) {
-    showToast('⚠️ Celular deve ter exatamente 9 dígitos'); return;
-  }
-  if (ddd && ddd.length !== 2) {
-    showToast('⚠️ DDD deve ter 2 dígitos'); return;
+    const btnF = document.getElementById('btnEtapa3Folhas');
+    if (btnF) btnF.disabled = false;
   }
 
-  const contatos = getContatos();
-  contatos[_modalKey] = { ddd, celular, anotacoes, nome: document.getElementById('modalNome').textContent };
-  saveContatos(contatos);
-  showToast('✅ Contato salvo!');
+  // Etapa 4
+  state.cargoAtualIndex = 0;
+  renderEtapa4Correspondencia();
+
+  // Etapa 5
+  processarIndicios();
+  renderEtapa5Indicios();
+
+  // Etapa 6
+  const anoMesFim = new Date(reg.dataFim).getFullYear() * 100 + (new Date(reg.dataFim).getMonth() + 1);
+  let ultimoMes = 0;
+  state.folhas.forEach(r => { const am = parseInt(r.ano_mes); if (am <= anoMesFim && am > ultimoMes) ultimoMes = am; });
+  state.ultimoMesValido = ultimoMes;
+  const elUm = document.getElementById('infoUltimoMes');
+  if (elUm) elUm.textContent = `Base de cálculo: ${String(ultimoMes%100).padStart(2,'0')}/${Math.floor(ultimoMes/100)}`;
+  renderEtapa6Vagas();
+
+  // Etapa 7
+  const zr = document.getElementById('zoneResultado');
+  if (zr && arquivos.resultado) {
+    zr.classList.add('loaded');
+    zr.querySelector('.upload-icon').textContent = '✅';
+    zr.querySelector('.upload-label').textContent = arquivos.resultado.nome;
+    zr.querySelector('.upload-hint').textContent = `${state.resultadoConcurso.length} candidatos`;
+  }
+  if (state.resultadoConcurso.length) {
+    const cU = new Set(state.resultadoConcurso.map(r => r.codigoCargo)).size;
+    const ap = state.resultadoConcurso.filter(r => (r.status||'').toUpperCase().includes('APROVAD')).length;
+    const el = document.getElementById('summaryResultado');
+    if (el) el.innerHTML = `
+      <div class="summary-box"><div class="summary-num">${cU}</div><div class="summary-lbl">Cargos</div></div>
+      <div class="summary-box"><div class="summary-num">${state.resultadoConcurso.length}</div><div class="summary-lbl">Candidatos</div></div>
+      <div class="summary-box"><div class="summary-num">${ap}</div><div class="summary-lbl">Aprovados</div></div>`;
+    const btnP = document.getElementById('btnIdentificarPreteridos');
+    if (btnP) btnP.disabled = false;
+  }
 }
 
-function abrirWhatsApp() {
-  const ddd = document.getElementById('modalDdd').value.trim();
-  const cel = document.getElementById('modalCelular').value.trim();
-  if (!ddd || !cel) { showToast('⚠️ Informe DDD e celular'); return; }
-  if (ddd.length !== 2 || cel.length !== 9) { showToast('⚠️ DDD (2 dígitos) e celular (9 dígitos)'); return; }
-  const nome = document.getElementById('modalNome').textContent;
-  const cargo = document.getElementById('modalCargo').textContent;
-  const msg = encodeURIComponent(`Olá, ${nome.split(' ')[0]}! Estamos entrando em contato a respeito do concurso público para o cargo de ${cargo} de ${state.orgao}.`);
-  window.open(`https://wa.me/55${ddd}${cel}?text=${msg}`, '_blank');
-}
-
-// Fechar modal ao clicar fora
-document.getElementById('modalPreterido').addEventListener('click', function(e) {
-  if (e.target === this) fecharModal();
-});
+// Compatibilidade
+function salvarResultado()  { _commitAuditoria(); }
+function salvarEExportar()  { _commitAuditoria(); }
+function salvarApp()        { _commitAuditoria(); }
+function exportarDados()    { _commitAuditoria(); }
+function importarDados()    {}
+function renderBanco()      { renderHub(); }
 
 // ===================== GITHUB CONFIG MODAL =====================
 function abrirModalGithub() {
