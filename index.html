@@ -1433,6 +1433,7 @@ async function handleFileVagasConcurso(input) {
     })).filter(r => r.cargo);
 
     // Guardar conteúdo bruto para persistência
+    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
     state.arquivos.vagasConcurso = { nome: file.name, conteudo: content };
 
     document.getElementById('zone1').classList.add('loaded');
@@ -1481,6 +1482,7 @@ async function handleFileVagasLei(input) {
     })).filter(r => r.cargo);
 
     // Guardar conteúdo bruto para persistência
+    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
     state.arquivos.vagasLei = { nome: file.name, conteudo: content };
 
     document.getElementById('zone2').classList.add('loaded');
@@ -1620,6 +1622,8 @@ async function handleFolha(input, ano) {
     state.anosCarregados[ano] = true;
 
     // Guardar conteúdo bruto para persistência
+    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+    if (!state.arquivos.folhas) state.arquivos.folhas = [];
     state.arquivos.folhas = state.arquivos.folhas.filter(f => f.ano !== ano);
     state.arquivos.folhas.push({ ano, nome: file.name, conteudo: content });
 
@@ -2353,6 +2357,7 @@ async function handleFileResultado(input) {
     })).filter(r => r.nome && r.codigoCargo !== '0');
 
     // Guardar conteúdo bruto para persistência
+    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
     state.arquivos.resultado = { nome: file.name, conteudo: content };
 
     const cargosUnicos = new Set(state.resultadoConcurso.map(r => r.codigoCargo)).size;
@@ -3243,6 +3248,8 @@ function novoAuditoria() {
     else if (typeof state[k] === 'object' && state[k] !== null && !(state[k] instanceof Date)) state[k] = {};
     else state[k] = null;
   });
+  // Restaurar estrutura correta de arquivos
+  state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
   // Reset steps
   document.querySelectorAll('.step-item').forEach((s,i) => {
     s.className = 'step-item' + (i === 0 ? ' active' : ' locked');
