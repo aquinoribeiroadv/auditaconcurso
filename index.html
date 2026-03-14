@@ -1069,8 +1069,8 @@ window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
   </div>
 
 <!-- MODAL CONFIG GITHUB -->
-<div id="modalGithub" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center;">
-  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;">
+<div id="modalGithub" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);">
+  <div style="position:absolute;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:white;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;">
     <div style="background:#1a3a1a;padding:14px 16px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;">
       <div style="font-family:'Syne',sans-serif;font-weight:800;color:white;font-size:0.95rem;">⚙️ Configurar GitHub</div>
       <button onclick="fecharModalGithub()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:700;">✕ Fechar</button>
@@ -2768,6 +2768,8 @@ async function _ghDeletePasta(slug) {
     }
   } catch(e) { console.warn('_ghDeletePasta:', e); }
 }
+
+async function _ghPutBinary(path, base64content, message) {
   const sha = await _ghGetSHA(path);
   return _ghRequest('PUT', path, {
     message,
@@ -3383,10 +3385,10 @@ document.getElementById('modalPreterido').addEventListener('click', function(e) 
 // ===================== GITHUB CONFIG MODAL =====================
 function abrirModalGithub() {
   const modal = document.getElementById('modalGithub');
-  modal.style.display = 'flex';
+  modal.style.display = 'block';
   document.getElementById('ghTokenInput').value = getGHToken();
   const status = document.getElementById('ghStatus');
-  status.textContent = getGHToken() ? '✅ Token configurado' : '⚠️ Nenhum token configurado';
+  status.textContent = getGHToken() ? '✅ Token configurado — pronto para usar' : '⚠️ Configure o token para salvar no GitHub';
   status.style.color = getGHToken() ? '#16a34a' : '#f59e0b';
 }
 
@@ -3418,16 +3420,7 @@ async function salvarTokenGH() {
   }
 }
 
-// ===================== AUTO-SAVE HOOKS ========================
-// Chamar autoSave() sempre que o state mudar significativamente
-function _hookAutoSave() {
-  // Interceptar verificarEtapa1 para salvar após configurar concurso
-  const _orig1 = window.verificarEtapa1;
-  if (_orig1) window.verificarEtapa1 = function() {
-    _orig1.apply(this, arguments);
-    if (state.orgao && state.dataInicio) autoSave();
-  };
-}
+
 
 // ===================== INIT =====================
 // Registrar Service Worker (PWA - funciona offline)
@@ -3439,11 +3432,20 @@ if ('serviceWorker' in navigator) {
 toggleConcursoValido();
 goStep(1);
 
-// Atualizar ícone do botão GitHub
-if (getGHToken()) {
-  const btnGH = document.getElementById('btnGH');
-  if (btnGH) btnGH.textContent = '☁️';
-}
+// Atualizar ícone do botão GitHub e mostrar status
+(function() {
+  const btn = document.getElementById('btnGH');
+  if (!btn) return;
+  if (getGHToken()) {
+    btn.textContent = '☁️';
+    btn.title = 'GitHub conectado';
+  } else {
+    btn.textContent = '⚙️';
+    btn.title = 'Configurar GitHub (necessário para salvar)';
+    // Mostrar aviso sutil
+    setTimeout(() => _mostrarStatusSync('⚙️ Configure o GitHub para salvar automaticamente'), 2000);
+  }
+})();
 
 // Carregar dados do GitHub em background (não bloqueia a UI)
 _inicializarDados();
@@ -3527,11 +3529,7 @@ salvarContato = function() {
   if (state.orgao) autoSave();
 };
 
-// Verificar etapa 1 — salva dados básicos do concurso
-const _origVerificarEtapa1 = verificarEtapa1;
-verificarEtapa1 = function() {
-  _origVerificarEtapa1.apply(this, arguments);
-};
+
 
 </script>
 </body>
