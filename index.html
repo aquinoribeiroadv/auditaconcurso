@@ -3029,6 +3029,7 @@ async function carregarResultado(id) {
   const reg = banco.find(b => b.id === id);
   if (!reg) { showToast('❌ Não encontrado.'); return; }
 
+  _carregandoDoHub = true; // impede auto-save durante carregamento
   document.getElementById('bancoPainel').style.display = 'none';
   _mostrarStatusSync('⏳ Carregando arquivos do GitHub...');
 
@@ -3077,6 +3078,7 @@ async function carregarResultado(id) {
   for (let i = 1; i <= 8; i++) liberarStep(i);
   goStep(8);
   renderEtapa8();
+  _carregandoDoHub = false; // libera auto-save para edições futuras
   _mostrarStatusSync(`✅ ${reg.orgao} carregado`);
 }
 
@@ -3175,6 +3177,112 @@ function salvarApp()        { _commitAuditoria(); }
 function exportarDados()    { _commitAuditoria(); }
 function importarDados()    {}
 function renderBanco()      { renderHub(); }
+
+// ===================== HUB DE AUDITORIAS =====================
+let _hubPastaAtual = null;
+let _carregandoDoHub = false; // flag para evitar auto-save ao carregar
+
+function toggleBanco() {
+  const painel = document.getElementById('bancoPainel');
+  const visivel = painel.style.display === 'flex';
+  if (visivel) {
+    painel.style.display = 'none';
+  } else {
+    painel.style.display = 'flex';
+    _hubPastaAtual = null;
+    renderHub();
+  }
+}
+
+function renderHub() {
+  const banco = getBanco();
+  const conteudo = document.getElementById('hubConteudo');
+  const vazio    = document.getElementById('bancoVazio');
+  const caminho  = document.getElementById('hubCaminho');
+  if (!conteudo) return;
+
+  if (caminho) caminho.textContent = '📂 Todas as Auditorias';
+
+  if (!banco.length) {
+    vazio.style.display = 'block';
+    conteudo.innerHTML = '';
+    return;
+  }
+  vazio.style.display = 'none';
+
+  conteudo.innerHTML = banco.map(b => {
+    const di    = b.dataInicio ? new Date(b.dataInicio) : null;
+    const df    = b.dataFim    ? new Date(b.dataFim)    : null;
+    const salvo = new Date(b.salvoEm);
+    const periodo = di ? `${formatDate(di)} a ${formatDate(df)}` : '';
+    const temPret = b.totalPreteridos > 0;
+    return `
+    <div style="background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;cursor:pointer;" onclick="carregarResultado(${b.id})">
+          <div style="font-weight:800;font-size:0.88rem;color:#1a3a1a;">${b.orgao}</div>
+          <div style="font-size:0.68rem;color:#666;margin-top:2px;">${periodo}</div>
+          <div style="margin-top:5px;">
+            <span style="font-size:0.75rem;font-weight:700;color:${temPret?'#dc2626':'#16a34a'};">
+              ${temPret ? `🚨 ${b.totalPreteridos} preterido${b.totalPreteridos!==1?'s':''}` : '✅ Sem preterição'}
+            </span>
+          </div>
+          <div style="font-size:0.62rem;color:#aaa;margin-top:2px;">
+            Salvo ${salvo.toLocaleDateString('pt-BR')} ${salvo.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+          <button onclick="carregarResultado(${b.id})"
+            style="background:#1a3a1a;border:none;color:white;border-radius:6px;padding:7px 12px;font-size:0.72rem;font-weight:800;cursor:pointer;">Ver</button>
+          <button onclick="excluirResultado(${b.id})"
+            style="background:#fee2e2;border:none;color:#dc2626;border-radius:6px;padding:7px 12px;font-size:0.72rem;cursor:pointer;">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function criarPasta() {
+  // Pastas não são mais usadas — auditorias são organizadas por órgão no GitHub
+  showToast('ℹ️ Auditorias são organizadas automaticamente por órgão.');
+}
+
+function novoAuditoria() {
+  document.getElementById('bancoPainel').style.display = 'none';
+  // Reset state completo
+  Object.keys(state).forEach(k => {
+    if (Array.isArray(state[k]))       state[k] = [];
+    else if (state[k] instanceof Date) state[k] = null;
+    else if (typeof state[k] === 'object' && state[k] !== null) state[k] = {};
+    else state[k] = null;
+  });
+  state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+  state.stepLiberado = 1;
+  state.stepAtual = 1;
+  // Reset UI das zonas de upload
+  ['zone1','zone2','zoneResultado'].forEach(id => {
+    const z = document.getElementById(id);
+    if (z) {
+      z.classList.remove('loaded');
+      z.querySelector('.upload-icon').textContent = z.id === 'zone1' ? '📋' : z.id === 'zone2' ? '📜' : '📄';
+      z.querySelector('.upload-label').textContent = 'Toque para selecionar o arquivo';
+      z.querySelector('.upload-hint').textContent = z.id === 'zoneResultado' ? 'Arquivo CSV do TCE-PB' : 'Formato .xls do TCE-PB';
+    }
+  });
+  // Reset steps
+  document.querySelectorAll('.step-item').forEach((s,i) => {
+    s.className = 'step-item' + (i === 0 ? ' active' : ' locked');
+  });
+  // Limpar campos etapa 1
+  const elOrgao = document.getElementById('orgao');
+  if (elOrgao) elOrgao.value = '';
+  const elInicio = document.getElementById('dataInicio');
+  if (elInicio) elInicio.value = '';
+  const elFim = document.getElementById('dataFim');
+  if (elFim) elFim.value = '';
+  goStep(1);
+  showToast('🆕 Nova auditoria iniciada!');
+}
 
 // ===================== GITHUB CONFIG MODAL =====================
 function abrirModalGithub() {
@@ -3305,12 +3413,12 @@ handleFileResultado = async function(input) {
   }
 };
 
-// Save completo (com preteridos, análises, etc) — só após renderEtapa8
+// Save completo (com preteridos, análises, etc) — só após renderEtapa8 de nova análise
 const _origRenderEtapa8 = renderEtapa8;
 renderEtapa8 = function() {
   _origRenderEtapa8.apply(this, arguments);
-  // Só salva se tem dados reais (não está só visualizando)
-  if (state.orgao && state.preteridosNominais !== undefined) {
+  // Só salva se não estamos carregando do Hub (evita sobrescrever com dados vazios)
+  if (state.orgao && !_carregandoDoHub && state.preteridosNominais && state.preteridosNominais.length >= 0) {
     clearTimeout(_autoSaveTimer);
     _autoSaveTimer = setTimeout(() => _commitAuditoria(), 2000);
   }
