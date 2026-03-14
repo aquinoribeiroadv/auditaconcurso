@@ -4,7 +4,7 @@
   "orgao": "Prefeitura Municipal de Lastro",
   "dataInicio": "2024-02-27T00:00:00.000Z",
   "dataFim": "2026-03-14T03:00:00.000Z",
-  "salvoEm": "2026-03-14T04:45:58.223Z",
+  "salvoEm": "2026-03-14T04:46:03.664Z",
   "totalCargos": 0,
   "totalIrregulares": 0,
   "totalPreteridos": 0,
@@ -316,7 +316,45 @@
       "totalVagas": 20
     }
   ],
-  "correspondencia": {},
+  "correspondencia": {
+    "10": [],
+    "11": [
+      "20000022 - PSICOLOGO"
+    ],
+    "12": [],
+    "13": [],
+    "14": [],
+    "15": [
+      "20000612 - PSICOPEDAGOGA CAPS"
+    ],
+    "16": [],
+    "17": [
+      "20000363 - PROFESSOR DE EDUCAÇÃO BASICA I - A        PRO- T",
+      "20000604 - PROFESSOR DE EDUCAÇÃO BASICA I- B  PRO-T"
+    ],
+    "18": [
+      "20000363 - PROFESSOR DE EDUCAÇÃO BASICA I - A        PRO- T",
+      "20000604 - PROFESSOR DE EDUCAÇÃO BASICA I- B  PRO-T"
+    ],
+    "19": [],
+    "03": [
+      "20000603 - AGENTE COMUNITARIO DE SAUDE"
+    ],
+    "07": [
+      "20000021 - ASSISTENTE SOCIAL"
+    ],
+    "09": [
+      "20000146 - ENFERMEIRA"
+    ],
+    "08": [],
+    "01": [],
+    "06": [],
+    "04": [
+      "20000195 - TECNICO EM ENFERMAGEM"
+    ],
+    "05": [],
+    "02": []
+  },
   "analiseVagas": [],
   "preteridosNominais": [],
   "resultadoConcurso": [],
