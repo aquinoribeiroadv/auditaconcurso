@@ -687,9 +687,12 @@ window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
       <h1>⚖️ AuditaConcurso</h1>
       <p>Auditoria de Preterição em Concursos Públicos — TCE-PB</p>
     </div>
-    <button onclick="toggleBanco()" style="background:white;border:none;color:#1a3a1a;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-      🗄️ Auditados
-    </button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button onclick="abrirModalGithub()" id="btnGH" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:20px;padding:8px 12px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">⚙️</button>
+      <button onclick="toggleBanco()" style="background:white;border:none;color:#1a3a1a;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+        🗄️ Auditados
+      </button>
+    </div>
   </div>
 </header>
 
@@ -1064,6 +1067,35 @@ window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
       <button class="btn btn-secondary" onclick="goStep(7)" style="width:100%">← Voltar</button>
     </div>
   </div>
+
+<!-- MODAL CONFIG GITHUB -->
+<div id="modalGithub" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px;">
+  <div style="background:white;border-radius:16px;width:100%;max-width:440px;overflow:hidden;">
+    <div style="background:#1a3a1a;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;color:white;font-size:0.95rem;">⚙️ Configurar GitHub</div>
+      <button onclick="fecharModalGithub()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;">✕</button>
+    </div>
+    <div style="padding:20px;">
+      <p style="font-size:0.82rem;color:#444;margin:0 0 16px;">
+        Para salvar automaticamente no GitHub, você precisa de um <strong>Token de Acesso Pessoal</strong>.<br><br>
+        <strong>Como obter:</strong><br>
+        1. Acesse <a href="https://github.com/settings/tokens/new" target="_blank" style="color:#1a3a1a;">github.com/settings/tokens/new</a><br>
+        2. Nome: <code>AuditaConcurso</code><br>
+        3. Expiration: <strong>No expiration</strong><br>
+        4. Marque: <strong>repo</strong> (acesso total)<br>
+        5. Clique <strong>Generate token</strong><br>
+        6. Copie e cole abaixo:
+      </p>
+      <label style="font-size:0.7rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;">Token do GitHub</label>
+      <input id="ghTokenInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+        style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:12px;font-size:0.88rem;box-sizing:border-box;margin-top:4px;font-family:monospace;" />
+      <button onclick="salvarTokenGH()" style="width:100%;margin-top:12px;background:#1a3a1a;border:none;color:white;border-radius:10px;padding:14px;font-size:0.9rem;font-weight:800;cursor:pointer;">
+        ✅ Salvar e Conectar
+      </button>
+      <div id="ghStatus" style="margin-top:10px;font-size:0.78rem;text-align:center;color:#666;"></div>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL PRETERIDO -->
 <div id="modalPreterido" style="display:none;position:fixed;inset:0;z-index:1000;background:white;display:none;flex-direction:column;">
@@ -2658,130 +2690,245 @@ function exportarRelatorio() {
 // ===================== BANCO DE RESULTADOS =====================
 const BANCO_KEY    = 'auditaConcurso_banco';
 const CONTATOS_KEY = 'auditaConcurso_contatos';
-const PASTAS_KEY   = 'auditaConcurso_pastas';
-
-// Ao iniciar: carrega dados do placeholder embutido no HTML para localStorage
-function _inicializarDados() {
-  try {
-    const el = document.getElementById('__AC_DADOS__');
-    if (!el) return;
-    const raw = el.textContent.trim();
-    if (!raw || raw === 'null') return;
-    const d = JSON.parse(raw);
-    if (d.banco)    localStorage.setItem(BANCO_KEY,    JSON.stringify(d.banco));
-    if (d.contatos) localStorage.setItem(CONTATOS_KEY, JSON.stringify(d.contatos));
-    if (d.pastas)   localStorage.setItem(PASTAS_KEY,   JSON.stringify(d.pastas));
-    // Marcar como já carregado para evitar sobrescrever dados mais recentes do localStorage
-    el.textContent = 'null';
-  } catch(e) { console.warn('Init dados:', e); }
-}
+const GH_TOKEN_KEY = 'auditaConcurso_ghToken';
+const GH_REPO      = 'aquinoribeiroadv/auditaconcurso';
+const GH_BRANCH    = 'main';
 
 function getBanco()     { try { return JSON.parse(localStorage.getItem(BANCO_KEY)||'[]');   } catch { return []; } }
-function setBanco(v)    { localStorage.setItem(BANCO_KEY,    JSON.stringify(v)); }
+function setBanco(v)    { localStorage.setItem(BANCO_KEY, JSON.stringify(v)); }
 function getContatos()  { try { return JSON.parse(localStorage.getItem(CONTATOS_KEY)||'{}'); } catch { return {}; } }
 function saveContatos(v){ localStorage.setItem(CONTATOS_KEY, JSON.stringify(v)); }
-function getPastas()    { try { return JSON.parse(localStorage.getItem(PASTAS_KEY)||'[]');  } catch { return []; } }
-function setPastas(v)   { localStorage.setItem(PASTAS_KEY,   JSON.stringify(v)); }
+function getPastas()    { return []; } // pastas são os próprios órgãos
+function setPastas()    {}
+function getGHToken()   { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
+function setGHToken(t)  { localStorage.setItem(GH_TOKEN_KEY, t); }
 
-// Gera e baixa novo HTML com dados embutidos — substituindo o arquivo do usuário
-function _gerarHTMLComDados() {
+// ── Auto-save (debounced) ──────────────────────────────────────
+let _autoSaveTimer = null;
+function autoSave() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => _commitAuditoria(), 2000);
+}
+
+// ── GitHub API ─────────────────────────────────────────────────
+async function _ghRequest(method, path, body) {
+  const token = getGHToken();
+  if (!token) return null;
+  const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${path}`, {
+    method,
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+async function _ghGetSHA(path) {
   try {
-    const dados = JSON.stringify({
-      banco: getBanco(),
-      contatos: getContatos(),
-      pastas: getPastas(),
-    });
-    // Usar source capturado no init (antes de manipulações DOM)
-    let html = window.__AC_SOURCE__;
-    if (!html) { html = document.documentElement.outerHTML; }
-    // Injetar dados no placeholder
-    html = html.replace(
-      /(<script[^>]*id="__AC_DADOS__"[^>]*type="application\/json"[^>]*>)[\s\S]*?(<\/script>)/,
-      (_, open, close) => open + dados + close
-    );
-    // Reset do flag de captura para próxima abertura funcionar
-    html = html.replace(
-      /(<script[^>]*>)\s*\/\/ Captura o HTML fonte[\s\S]*?(<\/script>)/,
-      (_, open, close) => open + '\nwindow.__AC_SOURCE__ = null;\n' + close
-    );
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'AuditaConcurso.html';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
-    return true;
+    const r = await _ghRequest('GET', path);
+    return r?.sha || null;
+  } catch { return null; }
+}
+
+async function _ghPut(path, content, message) {
+  const sha = await _ghGetSHA(path);
+  const encoded = btoa(unescape(encodeURIComponent(content)));
+  return _ghRequest('PUT', path, {
+    message,
+    content: encoded,
+    branch: GH_BRANCH,
+    ...(sha ? { sha } : {}),
+  });
+}
+
+async function _ghPutBinary(path, base64content, message) {
+  const sha = await _ghGetSHA(path);
+  return _ghRequest('PUT', path, {
+    message,
+    content: base64content,
+    branch: GH_BRANCH,
+    ...(sha ? { sha } : {}),
+  });
+}
+
+// ── Slug do órgão para nome de pasta ──────────────────────────
+function orgaoSlug(orgao) {
+  return (orgao || 'sem-orgao')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9\s-]/g, '')
+    .trim().replace(/\s+/g, '-')
+    .toLowerCase().substring(0, 40);
+}
+
+// ── Commit automático da auditoria no GitHub ──────────────────
+async function _commitAuditoria() {
+  if (!state.orgao || !getGHToken()) return;
+  try {
+    const slug = orgaoSlug(state.orgao);
+    const pasta = `dados/${slug}`;
+
+    // 1. Salvar auditoria.json com todos os dados computados
+    const registro = _buildRegistro();
+    // Arquivos brutos excluídos do JSON (estão separados no repo)
+    const regSemArquivos = { ...registro };
+    delete regSemArquivos.arquivos;
+    await _ghPut(`${pasta}/auditoria.json`, JSON.stringify(regSemArquivos, null, 2),
+      `Auto-save: ${state.orgao} - ${new Date().toLocaleString('pt-BR')}`);
+
+    // 2. Salvar arquivos brutos se existirem e ainda não enviados
+    await _commitArquivos(pasta);
+
+    // 3. Atualizar banco local
+    _salvarBancoLocal(registro);
+
+    // 4. Atualizar banco.json global no repo
+    const banco = getBanco();
+    const resumos = banco.map(b => ({
+      id: b.id, orgao: b.orgao, slug: orgaoSlug(b.orgao),
+      dataInicio: b.dataInicio, dataFim: b.dataFim,
+      salvoEm: b.salvoEm, totalPreteridos: b.totalPreteridos,
+      totalIrregulares: b.totalIrregulares,
+    }));
+    await _ghPut('dados/banco.json', JSON.stringify(resumos, null, 2),
+      `Índice atualizado: ${new Date().toLocaleString('pt-BR')}`);
+
+    _mostrarStatusSync('✅ Salvo no GitHub');
   } catch(e) {
-    console.error('Erro ao gerar HTML:', e);
-    return false;
+    console.warn('Auto-save GitHub:', e);
+    _mostrarStatusSync('⚠️ Salvo localmente');
   }
 }
 
-function salvarApp() { _gerarHTMLComDados(); }
-function exportarDados() { _gerarHTMLComDados(); }
-function importarDados() { showToast('Use o botão "Auditados" para ver suas auditorias.'); }
+async function _commitArquivos(pasta) {
+  const arq = state.arquivos || {};
 
-// Salva e gera HTML automaticamente
-function salvarEExportar() {
-  salvarResultado();
-  setTimeout(() => {
-    if (_gerarHTMLComDados()) {
-      showToast('✅ Auditoria salva! Substitua o arquivo AuditaConcurso.html pelo baixado.');
+  if (arq.vagasConcurso && !arq.vagasConcurso._ghSalvo) {
+    const b64 = btoa(unescape(encodeURIComponent(arq.vagasConcurso.conteudo)));
+    await _ghPutBinary(`${pasta}/${arq.vagasConcurso.nome}`, b64, 'Arquivo: vagas concurso');
+    arq.vagasConcurso._ghSalvo = true;
+  }
+  if (arq.vagasLei && !arq.vagasLei._ghSalvo) {
+    const b64 = btoa(unescape(encodeURIComponent(arq.vagasLei.conteudo)));
+    await _ghPutBinary(`${pasta}/${arq.vagasLei.nome}`, b64, 'Arquivo: vagas lei');
+    arq.vagasLei._ghSalvo = true;
+  }
+  if (arq.resultado && !arq.resultado._ghSalvo) {
+    const b64 = btoa(unescape(encodeURIComponent(arq.resultado.conteudo)));
+    await _ghPutBinary(`${pasta}/${arq.resultado.nome}`, b64, 'Arquivo: resultado concurso');
+    arq.resultado._ghSalvo = true;
+  }
+  (arq.folhas || []).forEach(async f => {
+    if (!f._ghSalvo) {
+      const b64 = btoa(unescape(encodeURIComponent(f.conteudo)));
+      await _ghPutBinary(`${pasta}/${f.nome}`, b64, `Arquivo: folha ${f.ano}`);
+      f._ghSalvo = true;
     }
-  }, 400);
+  });
 }
 
-function salvarResultado() {
-  if (!state.preteridosNominais || !state.orgao) {
-    showToast('❌ Nenhum resultado para salvar.'); return;
+function _mostrarStatusSync(msg) {
+  let el = document.getElementById('syncStatus');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'syncStatus';
+    el.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1a3a1a;color:white;padding:6px 16px;border-radius:20px;font-size:0.72rem;font-weight:700;z-index:9999;transition:opacity 0.5s;';
+    document.body.appendChild(el);
   }
-  const banco = getBanco();
-  const totalPret = state.preteridosNominais.reduce((s,p) => s + p.preteridos.length, 0);
-  const totalIrr  = state.preteridosNominais.reduce((s,p) => s + p.nIrregulares, 0);
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
 
-  // Criar pasta automaticamente com nome do órgão (se não existir)
-  let pastas = getPastas();
-  let pastaId = pastas.find(p => p.nome === state.orgao && !p.pai)?.id;
-  if (!pastaId) {
-    pastaId = Date.now().toString() + '_pasta';
-    pastas.push({ id: pastaId, nome: state.orgao, pai: null });
-    setPastas(pastas);
-  }
+// ── Inicialização: carrega banco do GitHub ─────────────────────
+async function _inicializarDados() {
+  // Primeiro: carregar banco local imediatamente
+  // Depois: sincronizar com GitHub em background
+  if (!getGHToken()) return;
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GH_REPO}/contents/dados/banco.json?ref=${GH_BRANCH}`,
+      { headers: { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' } }
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    const resumos = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
 
-  const idxExist = banco.findIndex(b => b.orgao === state.orgao && b.dataInicio === state.dataInicio?.toISOString());
-  const id = idxExist >= 0 ? banco[idxExist].id : Date.now();
-  const registro = {
-    id,
-    pasta: pastaId,
+    // Para cada resumo, tentar carregar auditoria.json completa
+    const bancoLocal = getBanco();
+    const bancoMap = new Map(bancoLocal.map(b => [b.id, b]));
+
+    for (const r of resumos) {
+      if (!bancoMap.has(r.id)) {
+        // Carregar auditoria completa do GitHub
+        try {
+          const ar = await fetch(
+            `https://api.github.com/repos/${GH_REPO}/contents/dados/${r.slug}/auditoria.json?ref=${GH_BRANCH}`,
+            { headers: { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' } }
+          );
+          if (ar.ok) {
+            const ad = await ar.json();
+            const auditoria = JSON.parse(decodeURIComponent(escape(atob(ad.content.replace(/\n/g,'')))));
+            bancoMap.set(auditoria.id, auditoria);
+          }
+        } catch {}
+      }
+    }
+    setBanco([...bancoMap.values()].sort((a,b) => b.id - a.id));
+    renderHub();
+    _mostrarStatusSync('☁️ Sincronizado com GitHub');
+  } catch(e) { console.warn('Init GitHub:', e); }
+}
+
+// ── Build registro completo ────────────────────────────────────
+function _buildRegistro() {
+  const totalPret = (state.preteridosNominais||[]).reduce((s,p) => s + p.preteridos.length, 0);
+  const totalIrr  = (state.preteridosNominais||[]).reduce((s,p) => s + p.nIrregulares, 0);
+  const slug = orgaoSlug(state.orgao);
+  const idxExist = getBanco().findIndex(b => b.orgao === state.orgao && b.dataInicio === state.dataInicio?.toISOString());
+  const id = idxExist >= 0 ? getBanco()[idxExist].id : (state._auditoriaId || (state._auditoriaId = Date.now()));
+  return {
+    id, slug,
     orgao: state.orgao,
     dataInicio: state.dataInicio?.toISOString(),
     dataFim: state.dataFim?.toISOString(),
     salvoEm: new Date().toISOString(),
-    totalCargos: state.preteridosNominais.length,
+    totalCargos: (state.preteridosNominais||[]).length,
     totalIrregulares: totalIrr,
     totalPreteridos: totalPret,
     vagasConcurso: state.vagasConcurso || [],
     vagasLei: state.vagasLei || [],
     correspondencia: state.correspondencia || {},
     analiseVagas: state.analiseVagas || [],
-    preteridosNominais: state.preteridosNominais,
+    preteridosNominais: state.preteridosNominais || [],
     resultadoConcurso: state.resultadoConcurso || [],
     indicios: state.indicios || [],
+    contatos: getContatos(),
     arquivos: state.arquivos || {},
   };
-
-  if (idxExist >= 0) {
-    banco[idxExist] = registro;
-    showToast('✅ Atualizado! Use "💾 Exportar Dados" para backup.');
-  } else {
-    banco.unshift(registro);
-    showToast(`✅ Salvo na pasta "${state.orgao}"! Use "💾 Exportar Dados" para backup.`);
-  }
-  setBanco(banco);
-  renderBanco();
 }
+
+function _salvarBancoLocal(registro) {
+  const banco = getBanco();
+  const idx = banco.findIndex(b => b.id === registro.id);
+  if (idx >= 0) banco[idx] = registro;
+  else banco.unshift(registro);
+  setBanco(banco);
+}
+
+// ── Compatibilidade ───────────────────────────────────────────
+function salvarResultado() { _commitAuditoria(); }
+function salvarEExportar() { _commitAuditoria(); }
+function salvarApp()       { _commitAuditoria(); }
+function exportarDados()   { _commitAuditoria(); }
+function importarDados()   {}
+function _gerarHTMLComDados() {}
+
+
 
 function toggleBanco() {
   const painel = document.getElementById('bancoPainel');
@@ -3151,17 +3298,126 @@ document.getElementById('modalPreterido').addEventListener('click', function(e) 
   if (e.target === this) fecharModal();
 });
 
+// ===================== GITHUB CONFIG MODAL =====================
+function abrirModalGithub() {
+  const modal = document.getElementById('modalGithub');
+  modal.style.display = 'flex';
+  document.getElementById('ghTokenInput').value = getGHToken();
+  const status = document.getElementById('ghStatus');
+  status.textContent = getGHToken() ? '✅ Token configurado' : '⚠️ Nenhum token configurado';
+  status.style.color = getGHToken() ? '#16a34a' : '#f59e0b';
+}
+
+function fecharModalGithub() {
+  document.getElementById('modalGithub').style.display = 'none';
+}
+
+async function salvarTokenGH() {
+  const token = document.getElementById('ghTokenInput').value.trim();
+  if (!token) { document.getElementById('ghStatus').textContent = '❌ Token não pode estar vazio.'; return; }
+  const status = document.getElementById('ghStatus');
+  status.textContent = '⏳ Verificando...';
+  status.style.color = '#666';
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) throw new Error('Token inválido ou sem acesso ao repositório');
+    setGHToken(token);
+    // Atualizar ícone do botão
+    document.getElementById('btnGH').textContent = '☁️';
+    status.textContent = '✅ Conectado! Sincronizando...';
+    status.style.color = '#16a34a';
+    setTimeout(() => fecharModalGithub(), 1500);
+    _inicializarDados();
+  } catch(e) {
+    status.textContent = '❌ ' + e.message;
+    status.style.color = '#dc2626';
+  }
+}
+
+// ===================== AUTO-SAVE HOOKS ========================
+// Chamar autoSave() sempre que o state mudar significativamente
+function _hookAutoSave() {
+  // Interceptar verificarEtapa1 para salvar após configurar concurso
+  const _orig1 = window.verificarEtapa1;
+  if (_orig1) window.verificarEtapa1 = function() {
+    _orig1.apply(this, arguments);
+    if (state.orgao && state.dataInicio) autoSave();
+  };
+}
+
 // ===================== INIT =====================
 // Registrar Service Worker (PWA - funciona offline)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
-// Capturar HTML fonte antes de qualquer manipulação
-window.__AC_SOURCE__ = document.documentElement.outerHTML;
-// Carregar dados embutidos no HTML para localStorage
-_inicializarDados();
+
+// Inicializar app
 toggleConcursoValido();
 goStep(1);
+
+// Atualizar ícone do botão GitHub
+if (getGHToken()) {
+  const btnGH = document.getElementById('btnGH');
+  if (btnGH) btnGH.textContent = '☁️';
+}
+
+// Carregar dados do GitHub em background (não bloqueia a UI)
+_inicializarDados();
+
+// Adicionar auto-save em pontos-chave do fluxo
+// Após cada arquivo carregado
+const _origVagasConcurso = handleFileVagasConcurso;
+handleFileVagasConcurso = async function(input) {
+  await _origVagasConcurso.apply(this, arguments);
+  autoSave();
+};
+const _origVagasLei = handleFileVagasLei;
+handleFileVagasLei = async function(input) {
+  await _origVagasLei.apply(this, arguments);
+  autoSave();
+};
+const _origFolha = handleFolha;
+handleFolha = async function(input, ano) {
+  await _origFolha.apply(this, arguments);
+  autoSave();
+};
+const _origResultado = handleFileResultado;
+handleFileResultado = async function(input) {
+  await _origResultado.apply(this, arguments);
+  autoSave();
+};
+// Após salvar contato de preterido
+const _origSalvarContato = salvarContato;
+salvarContato = function() {
+  _origSalvarContato.apply(this, arguments);
+  autoSave();
+};
+// Após processar análise de vagas
+const _origProcessarAnalise = processarAnaliseVagas;
+processarAnaliseVagas = function() {
+  _origProcessarAnalise.apply(this, arguments);
+  autoSave();
+};
+// Após processar preteridos nominais
+const _origProcessarPret = processarPreteridosNominais;
+processarPreteridosNominais = function() {
+  _origProcessarPret.apply(this, arguments);
+  autoSave();
+};
+// Após confirmar correspondências
+const _origFinalizarCorr = finalizarEtapa4;
+finalizarEtapa4 = function() {
+  _origFinalizarCorr.apply(this, arguments);
+  autoSave();
+};
+// Após preencher dados do concurso (etapa 1)
+const _origVerificarEtapa1 = verificarEtapa1;
+verificarEtapa1 = function() {
+  _origVerificarEtapa1.apply(this, arguments);
+  if (state.orgao && state.dataInicio) autoSave();
+};
 </script>
 </body>
 </html>
