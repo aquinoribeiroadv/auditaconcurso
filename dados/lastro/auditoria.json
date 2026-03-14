@@ -4,7 +4,7 @@
   "orgao": "Lastro",
   "dataInicio": "2024-02-27T00:00:00.000Z",
   "dataFim": "2026-03-14T03:00:00.000Z",
-  "salvoEm": "2026-03-14T19:34:54.735Z",
+  "salvoEm": "2026-03-14T19:35:24.290Z",
   "totalCargos": 4,
   "totalIrregulares": 8,
   "totalPreteridos": 8,
@@ -12800,7 +12800,14 @@
       ]
     }
   ],
-  "contatos": {},
+  "contatos": {
+    "Lastro||Técnico em Enfermagem (Plantonista)||4": {
+      "ddd": "83",
+      "celular": "988077448",
+      "anotacoes": "",
+      "nome": "ANDRESA FERREIRA DA SILVA"
+    }
+  },
   "arquivos": {
     "vagasConcurso": {
       "nome": "vagasCargoConcurso (9).xls",
