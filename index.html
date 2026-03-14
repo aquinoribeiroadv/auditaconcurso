@@ -1433,7 +1433,7 @@ async function handleFileVagasConcurso(input) {
     })).filter(r => r.cargo);
 
     // Guardar conteúdo bruto para persistência
-    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+    _normArquivos();
     state.arquivos.vagasConcurso = { nome: file.name, conteudo: content };
 
     document.getElementById('zone1').classList.add('loaded');
@@ -1482,7 +1482,7 @@ async function handleFileVagasLei(input) {
     })).filter(r => r.cargo);
 
     // Guardar conteúdo bruto para persistência
-    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+    _normArquivos();
     state.arquivos.vagasLei = { nome: file.name, conteudo: content };
 
     document.getElementById('zone2').classList.add('loaded');
@@ -1622,8 +1622,7 @@ async function handleFolha(input, ano) {
     state.anosCarregados[ano] = true;
 
     // Guardar conteúdo bruto para persistência
-    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
-    if (!state.arquivos.folhas) state.arquivos.folhas = [];
+    _normArquivos();
     state.arquivos.folhas = state.arquivos.folhas.filter(f => f.ano !== ano);
     state.arquivos.folhas.push({ ano, nome: file.name, conteudo: content });
 
@@ -2357,7 +2356,7 @@ async function handleFileResultado(input) {
     })).filter(r => r.nome && r.codigoCargo !== '0');
 
     // Guardar conteúdo bruto para persistência
-    if (!state.arquivos) state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+    _normArquivos();
     state.arquivos.resultado = { nome: file.name, conteudo: content };
 
     const cargosUnicos = new Set(state.resultadoConcurso.map(r => r.codigoCargo)).size;
@@ -2750,7 +2749,25 @@ async function _ghPut(path, content, message) {
   });
 }
 
-async function _ghPutBinary(path, base64content, message) {
+async function _ghDelete(path, message) {
+  const sha = await _ghGetSHA(path);
+  if (!sha) return; // arquivo não existe, nada a fazer
+  return _ghRequest('DELETE', path, { message, sha, branch: GH_BRANCH });
+}
+
+async function _ghDeletePasta(slug) {
+  if (!getGHToken() || !slug) return;
+  const pasta = `dados/${slug}`;
+  try {
+    const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}?ref=${GH_BRANCH}`, { headers });
+    if (!res.ok) return;
+    const arquivos = await res.json();
+    for (const arq of arquivos) {
+      await _ghDelete(`${pasta}/${arq.name}`, `Excluindo: ${arq.name}`);
+    }
+  } catch(e) { console.warn('_ghDeletePasta:', e); }
+}
   const sha = await _ghGetSHA(path);
   return _ghRequest('PUT', path, {
     message,
@@ -2761,6 +2778,15 @@ async function _ghPutBinary(path, base64content, message) {
 }
 
 // ── Slug do órgão para nome de pasta ──────────────────────────
+// Garante que state.arquivos sempre tem a estrutura correta
+function _normArquivos() {
+  if (!state.arquivos || typeof state.arquivos !== 'object') {
+    state.arquivos = { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+  }
+  if (!Array.isArray(state.arquivos.folhas)) state.arquivos.folhas = [];
+  return state.arquivos;
+}
+
 function orgaoSlug(orgao) {
   return (orgao || 'sem-orgao')
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -3062,11 +3088,31 @@ function moverAuditoria(id, pastaId) {
 
 function renderBanco() { renderHub(); } // compatibilidade
 
-function excluirResultado(id) {
-  const banco = getBanco().filter(b => b.id !== id);
-  setBanco(banco);
+async function excluirResultado(id) {
+  const banco = getBanco();
+  const reg = banco.find(b => b.id === id);
+  const slug = reg?.slug || (reg ? orgaoSlug(reg.orgao) : null);
+
+  // Remover do banco local
+  setBanco(banco.filter(b => b.id !== id));
   renderHub();
-  showToast('🗑️ Resultado excluído.');
+
+  // Remover do GitHub
+  if (slug && getGHToken()) {
+    _mostrarStatusSync('🗑️ Excluindo do GitHub...');
+    await _ghDeletePasta(slug);
+    // Atualizar banco.json no GitHub
+    const bancoAtualizado = getBanco();
+    const resumos = bancoAtualizado.map(b => ({
+      id: b.id, orgao: b.orgao, slug: b.slug || orgaoSlug(b.orgao),
+      dataInicio: b.dataInicio, dataFim: b.dataFim,
+      salvoEm: b.salvoEm, totalPreteridos: b.totalPreteridos, totalIrregulares: b.totalIrregulares,
+    }));
+    await _ghPut('dados/banco.json', JSON.stringify(resumos, null, 2), 'Índice: auditoria excluída');
+    _mostrarStatusSync('✅ Excluído do GitHub');
+  } else {
+    showToast('🗑️ Resultado excluído.');
+  }
 }
 
 async function carregarResultado(id) {
@@ -3108,7 +3154,7 @@ async function carregarResultado(id) {
   state.analiseVagas       = reg.analiseVagas || [];
   state.preteridosNominais = reg.preteridosNominais || [];
   state.resultadoConcurso  = reg.resultadoConcurso || [];
-  state.arquivos           = reg.arquivos || { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+  state.arquivos           = reg.arquivos || {}; _normArquivos();
   state.indicios           = reg.indicios || [];
   if (reg.contatos) saveContatos(reg.contatos);
 
@@ -3233,12 +3279,7 @@ async function _buscarArquivosGH(reg) {
   } catch(e) { console.warn('_buscarArquivosGH:', e); }
 }
 
-function excluirResultado(id) {
-  const banco = getBanco().filter(b => b.id !== id);
-  setBanco(banco);
-  renderBanco();
-  showToast('🗑️ Resultado excluído.');
-}
+
 
 function novoAuditoria() {
   document.getElementById('bancoPainel').style.display = 'none';
@@ -3407,58 +3448,91 @@ if (getGHToken()) {
 // Carregar dados do GitHub em background (não bloqueia a UI)
 _inicializarDados();
 
-// Adicionar auto-save em pontos-chave do fluxo
-// Após cada arquivo carregado
+// ── Auto-save inteligente ──────────────────────────────────────
+// Hooks de arquivo: apenas fazem upload dos arquivos brutos no GitHub
+// O save completo (com preteridos) só acontece após renderEtapa8
+
+// Após cada arquivo carregado — envia o arquivo para o GitHub
 const _origVagasConcurso = handleFileVagasConcurso;
 handleFileVagasConcurso = async function(input) {
   await _origVagasConcurso.apply(this, arguments);
-  autoSave();
+  if (state.orgao && getGHToken()) {
+    const slug = orgaoSlug(state.orgao);
+    const arq = state.arquivos?.vagasConcurso;
+    if (arq && !arq._ghSalvo) {
+      const b64 = btoa(unescape(encodeURIComponent(arq.conteudo)));
+      await _ghPutBinary(`dados/${slug}/${arq.nome}`, b64, 'Arquivo: vagas concurso');
+      arq._ghSalvo = true;
+    }
+  }
 };
+
 const _origVagasLei = handleFileVagasLei;
 handleFileVagasLei = async function(input) {
   await _origVagasLei.apply(this, arguments);
-  autoSave();
+  if (state.orgao && getGHToken()) {
+    const slug = orgaoSlug(state.orgao);
+    const arq = state.arquivos?.vagasLei;
+    if (arq && !arq._ghSalvo) {
+      const b64 = btoa(unescape(encodeURIComponent(arq.conteudo)));
+      await _ghPutBinary(`dados/${slug}/${arq.nome}`, b64, 'Arquivo: vagas lei');
+      arq._ghSalvo = true;
+    }
+  }
 };
+
 const _origFolha = handleFolha;
 handleFolha = async function(input, ano) {
   await _origFolha.apply(this, arguments);
-  autoSave();
+  if (state.orgao && getGHToken()) {
+    const slug = orgaoSlug(state.orgao);
+    const f = (state.arquivos?.folhas || []).find(x => x.ano === ano);
+    if (f && !f._ghSalvo) {
+      const b64 = btoa(unescape(encodeURIComponent(f.conteudo)));
+      await _ghPutBinary(`dados/${slug}/${f.nome}`, b64, `Arquivo: folha ${ano}`);
+      f._ghSalvo = true;
+    }
+  }
 };
+
 const _origResultado = handleFileResultado;
 handleFileResultado = async function(input) {
   await _origResultado.apply(this, arguments);
-  autoSave();
+  if (state.orgao && getGHToken()) {
+    const slug = orgaoSlug(state.orgao);
+    const arq = state.arquivos?.resultado;
+    if (arq && !arq._ghSalvo) {
+      const b64 = btoa(unescape(encodeURIComponent(arq.conteudo)));
+      await _ghPutBinary(`dados/${slug}/${arq.nome}`, b64, 'Arquivo: resultado');
+      arq._ghSalvo = true;
+    }
+  }
 };
-// Após salvar contato de preterido
+
+// Save completo (com preteridos, análises, etc) — só após renderEtapa8
+const _origRenderEtapa8 = renderEtapa8;
+renderEtapa8 = function() {
+  _origRenderEtapa8.apply(this, arguments);
+  // Só salva se tem dados reais (não está só visualizando)
+  if (state.orgao && state.preteridosNominais !== undefined) {
+    clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = setTimeout(() => _commitAuditoria(), 2000);
+  }
+};
+
+// Contatos salvos imediatamente
 const _origSalvarContato = salvarContato;
 salvarContato = function() {
   _origSalvarContato.apply(this, arguments);
-  autoSave();
+  if (state.orgao) autoSave();
 };
-// Após processar análise de vagas
-const _origProcessarAnalise = processarAnaliseVagas;
-processarAnaliseVagas = function() {
-  _origProcessarAnalise.apply(this, arguments);
-  autoSave();
-};
-// Após processar preteridos nominais
-const _origProcessarPret = processarPreteridosNominais;
-processarPreteridosNominais = function() {
-  _origProcessarPret.apply(this, arguments);
-  autoSave();
-};
-// Após confirmar correspondências
-const _origFinalizarCorr = finalizarEtapa4;
-finalizarEtapa4 = function() {
-  _origFinalizarCorr.apply(this, arguments);
-  autoSave();
-};
-// Após preencher dados do concurso (etapa 1)
+
+// Verificar etapa 1 — salva dados básicos do concurso
 const _origVerificarEtapa1 = verificarEtapa1;
 verificarEtapa1 = function() {
   _origVerificarEtapa1.apply(this, arguments);
-  if (state.orgao && state.dataInicio) autoSave();
 };
+
 </script>
 </body>
 </html>
