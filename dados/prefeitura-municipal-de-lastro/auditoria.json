@@ -4,7 +4,7 @@
   "orgao": "Prefeitura Municipal de Lastro",
   "dataInicio": "2024-02-27T00:00:00.000Z",
   "dataFim": "2026-03-14T03:00:00.000Z",
-  "salvoEm": "2026-03-14T04:45:39.566Z",
+  "salvoEm": "2026-03-14T04:45:46.472Z",
   "totalCargos": 0,
   "totalIrregulares": 0,
   "totalPreteridos": 0,
@@ -181,7 +181,141 @@
       "totalVagas": 2
     }
   ],
-  "vagasLei": [],
+  "vagasLei": [
+    {
+      "codigo": "03",
+      "cargo": "Agente Comunitário de Saúde",
+      "ocupadosAntes": 6,
+      "disponiveis": 10,
+      "totalVagas": 16
+    },
+    {
+      "codigo": "07",
+      "cargo": "Assistente Social",
+      "ocupadosAntes": 1,
+      "disponiveis": 6,
+      "totalVagas": 7
+    },
+    {
+      "codigo": "13",
+      "cargo": "Contador",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "14",
+      "cargo": "Educador Físico - NASF",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "09",
+      "cargo": "Enfermeiro ESF",
+      "ocupadosAntes": 0,
+      "disponiveis": 4,
+      "totalVagas": 4
+    },
+    {
+      "codigo": "08",
+      "cargo": "Enfermeiro Plantonista",
+      "ocupadosAntes": 0,
+      "disponiveis": 12,
+      "totalVagas": 12
+    },
+    {
+      "codigo": "16",
+      "cargo": "Fiscal de Tributos",
+      "ocupadosAntes": 0,
+      "disponiveis": 6,
+      "totalVagas": 6
+    },
+    {
+      "codigo": "01",
+      "cargo": "Motorista (Categoria D)",
+      "ocupadosAntes": 0,
+      "disponiveis": 12,
+      "totalVagas": 12
+    },
+    {
+      "codigo": "10",
+      "cargo": "Médico Veterinário",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "06",
+      "cargo": "Orientador Social",
+      "ocupadosAntes": 0,
+      "disponiveis": 5,
+      "totalVagas": 5
+    },
+    {
+      "codigo": "12",
+      "cargo": "Procurador Jurídico",
+      "ocupadosAntes": 0,
+      "disponiveis": 4,
+      "totalVagas": 4
+    },
+    {
+      "codigo": "17",
+      "cargo": "Professor de Educação Básica I",
+      "ocupadosAntes": 23,
+      "disponiveis": 18,
+      "totalVagas": 41
+    },
+    {
+      "codigo": "18",
+      "cargo": "Professor de Educação Básica II",
+      "ocupadosAntes": 5,
+      "disponiveis": 12,
+      "totalVagas": 17
+    },
+    {
+      "codigo": "15",
+      "cargo": "Psicopedagogo",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "11",
+      "cargo": "Psicólogo",
+      "ocupadosAntes": 0,
+      "disponiveis": 2,
+      "totalVagas": 2
+    },
+    {
+      "codigo": "19",
+      "cargo": "Supervisor Escolar",
+      "ocupadosAntes": 1,
+      "disponiveis": 8,
+      "totalVagas": 9
+    },
+    {
+      "codigo": "04",
+      "cargo": "Técnico em Enfermagem (Plantonista)",
+      "ocupadosAntes": 0,
+      "disponiveis": 12,
+      "totalVagas": 12
+    },
+    {
+      "codigo": "05",
+      "cargo": "Técnico em Saúde Bucal",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "02",
+      "cargo": "Vigia",
+      "ocupadosAntes": 11,
+      "disponiveis": 9,
+      "totalVagas": 20
+    }
+  ],
   "correspondencia": {},
   "analiseVagas": [],
   "preteridosNominais": [],
