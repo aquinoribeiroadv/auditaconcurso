@@ -1,5 +1,15 @@
 [
   {
+    "id": 1773522075440,
+    "orgao": "Prefeitura de Lastro",
+    "slug": "prefeitura-de-lastro",
+    "dataInicio": "2024-02-27T00:00:00.000Z",
+    "dataFim": "2026-03-14T03:00:00.000Z",
+    "salvoEm": "2026-03-14T21:01:15.441Z",
+    "totalPreteridos": 0,
+    "totalIrregulares": 0
+  },
+  {
     "id": 1773521014163,
     "orgao": "Lastro",
     "slug": "lastro",
