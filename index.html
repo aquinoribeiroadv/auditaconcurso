@@ -45,6 +45,8 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  html { overflow-x: hidden; }
+
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--bg);
@@ -52,6 +54,8 @@
     min-height: 100vh;
     font-size: 15px;
     line-height: 1.6;
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* HEADER */
@@ -682,16 +686,14 @@ window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
 <body>
 
 <header class="app-header">
-  <div style="display:flex;justify-content:space-between;align-items:center;">
-    <div>
-      <h1>⚖️ AuditaConcurso</h1>
-      <p>Auditoria de Preterição em Concursos Públicos — TCE-PB</p>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <div style="min-width:0;flex:1;">
+      <h1 style="font-size:1.1rem;">⚖️ AuditaConcurso</h1>
+      <p style="font-size:0.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Auditoria de Preterição — TCE-PB</p>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button onclick="abrirModalGithub()" id="btnGH" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:20px;padding:8px 12px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">⚙️</button>
-      <button onclick="toggleBanco()" style="background:white;border:none;color:#1a3a1a;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-        🗄️ Auditados
-      </button>
+    <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+      <button onclick="abrirModalGithub()" id="btnGH" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:20px;width:36px;height:36px;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚙️</button>
+      <button onclick="toggleBanco()" style="background:white;border:none;color:#1a3a1a;border-radius:20px;padding:8px 14px;font-size:0.75rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);">🗄️ Auditados</button>
     </div>
   </div>
 </header>
@@ -1059,28 +1061,24 @@ window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
       ⬇️ Exportar Relatório Excel
     </button>
 
-    <button class="btn btn-primary" onclick="salvarEExportar()" style="margin-top:10px;background:var(--accent);">
-      💾 Salvar Auditoria
-    </button>
-
     <div style="margin-top:10px">
       <button class="btn btn-secondary" onclick="goStep(7)" style="width:100%">← Voltar</button>
     </div>
   </div>
 
 <!-- MODAL CONFIG GITHUB -->
-<div id="modalGithub" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);align-items:center;justify-content:center;padding:16px;">
-  <div style="background:white;border-radius:16px;width:100%;max-width:440px;overflow:hidden;">
-    <div style="background:#1a3a1a;padding:16px;display:flex;justify-content:space-between;align-items:center;">
+<div id="modalGithub" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);align-items:flex-end;justify-content:center;">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;">
+    <div style="background:#1a3a1a;padding:14px 16px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;">
       <div style="font-family:'Syne',sans-serif;font-weight:800;color:white;font-size:0.95rem;">⚙️ Configurar GitHub</div>
-      <button onclick="fecharModalGithub()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700;">✕</button>
+      <button onclick="fecharModalGithub()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:700;">✕ Fechar</button>
     </div>
     <div style="padding:20px;">
-      <p style="font-size:0.82rem;color:#444;margin:0 0 16px;">
+      <p style="font-size:0.82rem;color:#444;margin:0 0 16px;line-height:1.6;">
         Para salvar automaticamente no GitHub, você precisa de um <strong>Token de Acesso Pessoal</strong>.<br><br>
         <strong>Como obter:</strong><br>
-        1. Acesse <a href="https://github.com/settings/tokens/new" target="_blank" style="color:#1a3a1a;">github.com/settings/tokens/new</a><br>
-        2. Nome: <code>AuditaConcurso</code><br>
+        1. Acesse <a href="https://github.com/settings/tokens/new" target="_blank" style="color:#1a3a1a;font-weight:700;">github.com/settings/tokens/new</a><br>
+        2. Note: <code>AuditaConcurso</code><br>
         3. Expiration: <strong>No expiration</strong><br>
         4. Marque: <strong>repo</strong> (acesso total)<br>
         5. Clique <strong>Generate token</strong><br>
@@ -1088,7 +1086,7 @@ window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
       </p>
       <label style="font-size:0.7rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;">Token do GitHub</label>
       <input id="ghTokenInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-        style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:12px;font-size:0.88rem;box-sizing:border-box;margin-top:4px;font-family:monospace;" />
+        style="width:100%;border:1.5px solid #ddd;border-radius:8px;padding:12px;font-size:0.85rem;box-sizing:border-box;margin-top:4px;font-family:monospace;" />
       <button onclick="salvarTokenGH()" style="width:100%;margin-top:12px;background:#1a3a1a;border:none;color:white;border-radius:10px;padding:14px;font-size:0.9rem;font-weight:800;cursor:pointer;">
         ✅ Salvar e Conectar
       </button>
@@ -3061,12 +3059,35 @@ function excluirResultado(id) {
   showToast('🗑️ Resultado excluído.');
 }
 
-function carregarResultado(id) {
+async function carregarResultado(id) {
   const banco = getBanco();
-  const reg = banco.find(b => b.id === id);
+  let reg = banco.find(b => b.id === id);
   if (!reg) { showToast('❌ Resultado não encontrado.'); return; }
 
-  // ── 1. Restaurar estado completo ──
+  document.getElementById('bancoPainel').style.display = 'none';
+  _mostrarStatusSync('⏳ Carregando...');
+
+  // Buscar auditoria completa + arquivos do GitHub se necessário
+  if (getGHToken() && reg.slug && (!reg.arquivos || !reg.arquivos.folhas || !reg.arquivos.folhas.length)) {
+    try {
+      const res = await fetch(
+        `https://api.github.com/repos/${GH_REPO}/contents/dados/${reg.slug}/auditoria.json?ref=${GH_BRANCH}&t=${Date.now()}`,
+        { headers: { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const full = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+        reg = { ...reg, ...full };
+        reg.arquivos = reg.arquivos || { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+        await _buscarArquivosGH(reg);
+        const bancoAtual = getBanco();
+        const idx = bancoAtual.findIndex(b => b.id === id);
+        if (idx >= 0) { bancoAtual[idx] = reg; setBanco(bancoAtual); }
+      }
+    } catch(e) { console.warn('Erro ao buscar GH:', e); }
+  }
+
+  state._auditoriaId       = reg.id;
   state.orgao              = reg.orgao;
   state.dataInicio         = new Date(reg.dataInicio);
   state.dataFim            = new Date(reg.dataFim);
@@ -3079,8 +3100,8 @@ function carregarResultado(id) {
   state.resultadoConcurso  = reg.resultadoConcurso || [];
   state.arquivos           = reg.arquivos || { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
   state.indicios           = reg.indicios || [];
+  if (reg.contatos) saveContatos(reg.contatos);
 
-  // ── 2. Restaurar folhas dos conteúdos brutos ──
   state.folhas = [];
   state.anosCarregados = {};
   state.anosNecessarios = [];
@@ -3091,19 +3112,17 @@ function carregarResultado(id) {
         state.folhas.push(...rows);
         state.anosCarregados[f.ano] = true;
         if (!state.anosNecessarios.includes(f.ano)) state.anosNecessarios.push(f.ano);
-      } catch(e) { console.warn('Erro ao restaurar folha:', e); }
+      } catch(e) {}
     });
     state.cargosEIPFolha = [...new Set(
       state.folhas.filter(r => r.tipo_cargo !== 'Efetivos').map(r => (r.descricao_cargo||'').trim())
     )].filter(Boolean).sort();
   }
 
-  // ── 3. Re-renderizar Etapa 1 (Concurso) ──
   const elOrgao = document.getElementById('orgaoInput');
   if (elOrgao) elOrgao.value = state.orgao;
   const elInicio = document.getElementById('dataInicioInput');
   if (elInicio) elInicio.value = state.dataInicio.toISOString().slice(0,10);
-  // Verificar se concurso ainda válido (dataFim = hoje)
   const hoje_ = new Date(); hoje_.setHours(0,0,0,0);
   const dataFimD = new Date(state.dataFim); dataFimD.setHours(0,0,0,0);
   const aindaValido = dataFimD.getTime() === hoje_.getTime();
@@ -3112,86 +3131,96 @@ function carregarResultado(id) {
   const elFim = document.getElementById('dataFimInput');
   if (elFim && !aindaValido) elFim.value = state.dataFim.toISOString().slice(0,10);
 
-  // ── 4. Re-renderizar Etapa 2 (Arquivos) ──
   const arq = state.arquivos;
   const z1 = document.getElementById('zone1');
-  if (z1 && arq.vagasConcurso) {
-    z1.classList.add('loaded');
-    z1.querySelector('.upload-icon').textContent = '✅';
-    z1.querySelector('.upload-label').textContent = arq.vagasConcurso.nome;
-    z1.querySelector('.upload-hint').textContent = `${state.vagasConcurso.length} cargos`;
-  }
+  if (z1 && arq.vagasConcurso) { z1.classList.add('loaded'); z1.querySelector('.upload-icon').textContent='✅'; z1.querySelector('.upload-label').textContent=arq.vagasConcurso.nome; z1.querySelector('.upload-hint').textContent=`${state.vagasConcurso.length} cargos`; }
   const z2 = document.getElementById('zone2');
-  if (z2 && arq.vagasLei) {
-    z2.classList.add('loaded');
-    z2.querySelector('.upload-icon').textContent = '✅';
-    z2.querySelector('.upload-label').textContent = arq.vagasLei.nome;
-    z2.querySelector('.upload-hint').textContent = `${state.vagasLei.length} cargos`;
-  }
+  if (z2 && arq.vagasLei) { z2.classList.add('loaded'); z2.querySelector('.upload-icon').textContent='✅'; z2.querySelector('.upload-label').textContent=arq.vagasLei.nome; z2.querySelector('.upload-hint').textContent=`${state.vagasLei.length} cargos`; }
   if (state.vagasConcurso.length && state.vagasLei.length) renderPreviewConcurso();
 
-  // ── 5. Re-renderizar Etapa 3 (Folhas) ──
   if (state.anosNecessarios.length) {
     renderEtapa3Folhas();
-    // Marcar zonas de folhas como carregadas
     state.arquivos.folhas.forEach(f => {
       const zone = document.getElementById('zoneFolha' + f.ano);
-      if (zone) {
-        zone.classList.add('loaded');
-        zone.querySelector('.upload-icon').textContent = '✅';
-        zone.querySelector('.upload-label').textContent = f.nome;
-        zone.querySelector('.upload-hint').textContent = `${state.folhas.filter(r => Math.floor(parseInt(r.ano_mes)/100) === f.ano).length} registros`;
-      }
+      if (zone) { zone.classList.add('loaded'); zone.querySelector('.upload-icon').textContent='✅'; zone.querySelector('.upload-label').textContent=f.nome; zone.querySelector('.upload-hint').textContent=`${state.folhas.filter(r=>Math.floor(parseInt(r.ano_mes)/100)===f.ano).length} registros`; }
       const chip = document.getElementById('anoChip' + f.ano);
-      if (chip) { chip.classList.remove('needed'); chip.classList.add('loaded'); chip.textContent = '✅ ' + f.ano; }
+      if (chip) { chip.classList.remove('needed'); chip.classList.add('loaded'); chip.textContent='✅ '+f.ano; }
     });
-    document.getElementById('btnEtapa3Folhas').disabled = false;
+    const btnF = document.getElementById('btnEtapa3Folhas');
+    if (btnF) btnF.disabled = false;
   }
 
-  // ── 6. Re-renderizar Etapa 4 (Correspondência) ──
   state.cargoAtualIndex = 0;
   renderEtapa4Correspondencia();
-
-  // ── 7. Re-renderizar Etapa 5 (Indícios) ──
   processarIndicios();
   renderEtapa5Indicios();
 
-  // ── 8. Re-renderizar Etapa 6 (Vagas) ──
   const anoMesFim = state.dataFim.getFullYear() * 100 + (state.dataFim.getMonth() + 1);
   let ultimoMes = 0;
   state.folhas.forEach(r => { const am = parseInt(r.ano_mes); if (am <= anoMesFim && am > ultimoMes) ultimoMes = am; });
   state.ultimoMesValido = ultimoMes;
-  const anoUltimo = Math.floor(ultimoMes / 100);
-  const mesUltimo = ultimoMes % 100;
   const elUltimoMes = document.getElementById('infoUltimoMes');
-  if (elUltimoMes) elUltimoMes.textContent = `Base de cálculo: ${String(mesUltimo).padStart(2,'0')}/${anoUltimo} (último mês dentro da validade do concurso).`;
+  if (elUltimoMes) elUltimoMes.textContent = `Base de cálculo: ${String(ultimoMes%100).padStart(2,'0')}/${Math.floor(ultimoMes/100)} (último mês dentro da validade).`;
   renderEtapa6Vagas();
 
-  // ── 9. Re-renderizar Etapa 7 (Resultado) ──
   const zr = document.getElementById('zoneResultado');
-  if (zr && arq.resultado) {
-    zr.classList.add('loaded');
-    zr.querySelector('.upload-icon').textContent = '✅';
-    zr.querySelector('.upload-label').textContent = arq.resultado.nome;
-    zr.querySelector('.upload-hint').textContent = `${state.resultadoConcurso.length} candidatos`;
-  }
+  if (zr && arq.resultado) { zr.classList.add('loaded'); zr.querySelector('.upload-icon').textContent='✅'; zr.querySelector('.upload-label').textContent=arq.resultado.nome; zr.querySelector('.upload-hint').textContent=`${state.resultadoConcurso.length} candidatos`; }
   if (state.resultadoConcurso.length) {
     const cargosUnicos = new Set(state.resultadoConcurso.map(r => r.codigoCargo)).size;
     const aprovados = state.resultadoConcurso.filter(r => r.status && r.status.toUpperCase().includes('APROVAD')).length;
-    document.getElementById('summaryResultado').innerHTML = `
-      <div class="summary-box"><div class="summary-num">${cargosUnicos}</div><div class="summary-lbl">Cargos</div></div>
-      <div class="summary-box"><div class="summary-num">${state.resultadoConcurso.length}</div><div class="summary-lbl">Candidatos</div></div>
-      <div class="summary-box"><div class="summary-num">${aprovados}</div><div class="summary-lbl">Aprovados</div></div>`;
-    document.getElementById('btnIdentificarPreteridos').disabled = false;
+    const el = document.getElementById('summaryResultado');
+    if (el) el.innerHTML = `<div class="summary-box"><div class="summary-num">${cargosUnicos}</div><div class="summary-lbl">Cargos</div></div><div class="summary-box"><div class="summary-num">${state.resultadoConcurso.length}</div><div class="summary-lbl">Candidatos</div></div><div class="summary-box"><div class="summary-num">${aprovados}</div><div class="summary-lbl">Aprovados</div></div>`;
+    const btnPret = document.getElementById('btnIdentificarPreteridos');
+    if (btnPret) btnPret.disabled = false;
   }
 
-  // ── 10. Liberar todos os steps e ir ao 8 ──
   state.stepLiberado = 8;
   for (let i = 1; i <= 8; i++) liberarStep(i);
-  document.getElementById('bancoPainel').style.display = 'none';
   goStep(8);
   renderEtapa8();
-  showToast(`📂 ${reg.orgao} carregado!`);
+  _mostrarStatusSync(`✅ ${reg.orgao} carregado`);
+}
+
+async function _buscarArquivosGH(reg) {
+  if (!getGHToken() || !reg.slug) return;
+  const pasta = `dados/${reg.slug}`;
+  const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
+
+  async function fetchConteudo(nome) {
+    try {
+      const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}/${encodeURIComponent(nome)}?ref=${GH_BRANCH}`, { headers });
+      if (!res.ok) return null;
+      const data = await res.json();
+      return decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+    } catch { return null; }
+  }
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${pasta}?ref=${GH_BRANCH}`, { headers });
+    if (!res.ok) return;
+    const arquivos = await res.json();
+    reg.arquivos = reg.arquivos || { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+    for (const arq of arquivos) {
+      const nome = arq.name;
+      if (nome === 'auditoria.json') continue;
+      const conteudo = await fetchConteudo(nome);
+      if (!conteudo) continue;
+      if (/vagasCargo[Cc]oncurso/i.test(nome)) {
+        reg.arquivos.vagasConcurso = { nome, conteudo, _ghSalvo: true };
+      } else if (/CriadasPorLei|criadaspor/i.test(nome)) {
+        reg.arquivos.vagasLei = { nome, conteudo, _ghSalvo: true };
+      } else if (/resultado/i.test(nome) && nome.endsWith('.csv')) {
+        reg.arquivos.resultado = { nome, conteudo, _ghSalvo: true };
+      } else if (/servidores|folha/i.test(nome) && nome.endsWith('.csv')) {
+        const m = nome.match(/(\d{4})/);
+        const ano = m ? parseInt(m[1]) : 0;
+        if (!reg.arquivos.folhas) reg.arquivos.folhas = [];
+        const ei = reg.arquivos.folhas.findIndex(f => f.ano === ano);
+        if (ei >= 0) reg.arquivos.folhas[ei] = { ano, nome, conteudo, _ghSalvo: true };
+        else reg.arquivos.folhas.push({ ano, nome, conteudo, _ghSalvo: true });
+      }
+    }
+  } catch(e) { console.warn('_buscarArquivosGH:', e); }
 }
 
 function excluirResultado(id) {
