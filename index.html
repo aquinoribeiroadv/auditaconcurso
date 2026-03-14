@@ -1,0 +1,3167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AuditaConcurso — TCE-PB</title>
+<meta name="description" content="Ferramenta de Auditoria de Preterição em Concursos Públicos — TCE-PB">
+<meta name="theme-color" content="#1a3a1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AuditaConcurso">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+  :root {
+    --bg: #f4f3ef;
+    --surface: #ffffff;
+    --surface2: #f9f8f5;
+    --border: #e2e0d8;
+    --border-strong: #c8c5b8;
+    --text: #1a1916;
+    --text-muted: #7a7769;
+    --text-light: #a8a494;
+    --accent: #2d5a3d;
+    --accent-light: #e8f0ea;
+    --accent-mid: #4a8c5e;
+    --warning: #b5540a;
+    --warning-light: #fef3ea;
+    --danger: #9b1f1f;
+    --danger-light: #fdecea;
+    --success: #1e6b3a;
+    --success-light: #e6f4ec;
+    --info: #1a4a7a;
+    --info-light: #e8f0f9;
+    --step-inactive: #d4d1c8;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --shadow-md: 0 4px 24px rgba(0,0,0,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* HEADER */
+  .app-header {
+    background: var(--accent);
+    color: white;
+    padding: 20px 20px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+  }
+  .app-header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .app-header p {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    margin-top: 2px;
+    font-weight: 300;
+  }
+
+  /* STEPPER */
+  .stepper {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    overflow-x: auto;
+    display: flex;
+    gap: 0;
+    scrollbar-width: none;
+  }
+  .stepper::-webkit-scrollbar { display: none; }
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 10px 10px;
+    min-width: 64px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .step-item.active {
+    border-bottom-color: var(--accent);
+  }
+  .step-item.done {
+    border-bottom-color: var(--accent-mid);
+    opacity: 0.8;
+  }
+  .step-item.locked {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--step-inactive);
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 4px;
+    transition: all 0.2s;
+  }
+  .step-item.active .step-num { background: var(--accent); }
+  .step-item.done .step-num { background: var(--accent-mid); }
+  .step-item.done .step-num::after { content: '✓'; }
+  .step-item.done .step-num span { display: none; }
+  .step-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-align: center;
+    color: var(--text-muted);
+    line-height: 1.3;
+    max-width: 56px;
+  }
+  .step-item.active .step-label { color: var(--accent); font-weight: 600; }
+
+  /* MAIN */
+  .main { padding: 20px 16px 80px; max-width: 700px; margin: 0 auto; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+  .card-sub {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+
+  /* STEP HEADER */
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .step-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-header-text h2 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+  .step-header-text p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  /* FORM ELEMENTS */
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--surface2);
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  input[type="text"]:focus, input[type="date"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: white;
+  }
+  .form-row { margin-bottom: 14px; }
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* FILE UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface2);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .upload-zone.loaded {
+    border-color: var(--accent-mid);
+    border-style: solid;
+    background: var(--success-light);
+  }
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .upload-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .upload-hint {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    margin-top: 3px;
+  }
+  .upload-success {
+    font-size: 0.82rem;
+    color: var(--success);
+    font-weight: 500;
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 22px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.18s;
+    text-decoration: none;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    width: 100%;
+    font-size: 0.95rem;
+    padding: 14px;
+  }
+  .btn-primary:hover { background: #1f4029; }
+  .btn-primary:disabled { background: var(--step-inactive); cursor: not-allowed; }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1.5px solid #f0c0c0;
+  }
+  .btn-export {
+    background: var(--info);
+    color: white;
+    width: 100%;
+    padding: 14px;
+    font-size: 0.95rem;
+  }
+  .btn-export:hover { background: #123660; }
+
+  /* ALERTS */
+  .alert {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    margin-bottom: 14px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .alert-info { background: var(--info-light); color: var(--info); border: 1px solid #c0d4ee; }
+  .alert-warning { background: var(--warning-light); color: var(--warning); border: 1px solid #f0d0b0; }
+  .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #b0d8c0; }
+  .alert-danger { background: var(--danger-light); color: var(--danger); border: 1px solid #f0b0b0; }
+  .alert-icon { flex-shrink: 0; font-size: 1rem; }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; margin: 0 -4px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+  }
+  th {
+    background: var(--surface2);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    border-bottom: 1.5px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 99px;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+  .badge-red { background: var(--danger-light); color: var(--danger); }
+  .badge-yellow { background: var(--warning-light); color: var(--warning); }
+  .badge-green { background: var(--success-light); color: var(--success); }
+  .badge-gray { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* CORRESPONDÊNCIA */
+  .cargo-match-item {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .cargo-match-header {
+    background: var(--accent-light);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .cargo-match-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--accent);
+    flex: 1;
+  }
+  .cargo-match-vagas {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .cargo-match-body { padding: 10px 14px; }
+  .cargo-folha-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .cargo-folha-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface2);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cargo-folha-chip.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .cargo-folha-chip .chip-check {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    flex-shrink: 0;
+  }
+  .cargo-folha-chip.selected .chip-check { background: rgba(255,255,255,0.3); }
+  .none-hint {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    font-style: italic;
+  }
+
+  /* ANÁLISE VAGAS */
+  .vaga-card {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .vaga-card-header {
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .vaga-card-header.critico { background: var(--danger-light); border-bottom: 1px solid #f0c0c0; }
+  .vaga-card-header.atencao { background: var(--warning-light); border-bottom: 1px solid #f0d0b0; }
+  .vaga-card-header.ok { background: var(--success-light); border-bottom: 1px solid #b0d8c0; }
+  .vaga-cargo-name { font-weight: 700; font-size: 0.85rem; }
+  .vaga-card-body { padding: 12px 14px; }
+  .vaga-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .vaga-metric {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .vaga-metric-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .vaga-metric-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--text);
+  }
+  .vaga-metric-value.red { color: var(--danger); }
+  .vaga-metric-value.green { color: var(--success); }
+  .vaga-metric-value.orange { color: var(--warning); }
+  .vaga-bar-wrap { margin-top: 8px; }
+  .vaga-bar-label { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; }
+  .vaga-bar {
+    height: 10px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    display: flex;
+  }
+  .vaga-bar-seg {
+    height: 100%;
+    transition: width 0.4s;
+  }
+  .seg-efetivo { background: var(--accent-mid); }
+  .seg-eip-irregular { background: var(--danger); }
+  .seg-eip-excedente { background: var(--warning); }
+  .vaga-bar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* SERVIDORES LIST */
+  .servidor-item {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .servidor-item:last-child { border-bottom: none; }
+  .servidor-nome { font-weight: 500; font-size: 0.85rem; margin-bottom: 3px; }
+  .servidor-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .servidor-tag {
+    font-size: 0.68rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: var(--text-muted);
+  }
+
+  /* ANOS NECESSÁRIOS */
+  .anos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .ano-chip {
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+  }
+  .ano-chip.needed { background: var(--warning-light); color: var(--warning); border: 1.5px solid #f0d0a0; }
+  .ano-chip.loaded { background: var(--success-light); color: var(--success); border: 1.5px solid #a0d8b0; }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  /* SUMMARY ROW */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .summary-box {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .summary-num {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .summary-lbl { font-size: 0.62rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.03em; font-weight: 600; line-height: 1.3; word-break: break-word; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    white-space: nowrap;
+    box-shadow: var(--shadow-md);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* SECTION COLLAPSED */
+  .collapsible-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    padding: 4px 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .collapsible-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+  .collapse-arrow { transition: transform 0.2s; font-size: 0.8rem; color: var(--text-muted); }
+  .collapsed .collapse-arrow { transform: rotate(-90deg); }
+  .collapsible-body { margin-top: 12px; }
+  .collapsed .collapsible-body { display: none; }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    transition: width 0.4s;
+  }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+
+  /* SCROLL TOP */
+  .step-view { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* FOOTER NAV */
+  .bottom-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .bottom-nav .btn { flex: 1; }
+
+  /* MOBILE FINE-TUNING */
+  @media (max-width: 400px) {
+    .form-grid-2 { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    .vaga-metrics { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<script id="__AC_DADOS__" type="application/json">null</script>
+<script>
+// Captura o HTML fonte ANTES de qualquer manipulação do DOM
+window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
+</script>
+<body>
+
+<header class="app-header">
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <h1>⚖️ AuditaConcurso</h1>
+      <p>Auditoria de Preterição em Concursos Públicos — TCE-PB</p>
+    </div>
+    <button onclick="toggleBanco()" style="background:white;border:none;color:#1a3a1a;border-radius:20px;padding:8px 16px;font-size:0.78rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+      🗄️ Auditados
+    </button>
+  </div>
+</header>
+
+<!-- HUB DE AUDITORIAS (tela cheia) -->
+<div id="bancoPainel" style="display:none;position:fixed;inset:0;z-index:500;background:#1a1a1a;flex-direction:column;">
+
+  <!-- Header do Hub -->
+  <div style="background:#1a3a1a;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:white;">🗄️ Hub de Auditorias</div>
+    <button onclick="toggleBanco()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:8px;padding:7px 14px;font-size:0.85rem;font-weight:700;cursor:pointer;">✕ Fechar</button>
+  </div>
+
+  <!-- Barra de ações -->
+  <div style="background:#222;padding:10px 16px;display:flex;gap:8px;align-items:center;flex-shrink:0;border-bottom:1px solid #333;">
+    <button onclick="novoAuditoria()" style="background:#1a3a1a;border:1px solid #3a6a3a;color:#7ec87e;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;flex-shrink:0;">➕ Nova Auditoria</button>
+    <button onclick="criarPasta()" style="background:#222;border:1px solid #444;color:#aaa;border-radius:8px;padding:8px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;flex-shrink:0;">📁 Nova Pasta</button>
+    <div id="hubCaminho" style="font-size:0.72rem;color:#666;flex:1;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📂 Raiz</div>
+  </div>
+
+  <!-- Conteúdo do Hub -->
+  <div style="flex:1;overflow-y:auto;padding:12px 16px;">
+    <div id="hubConteudo"></div>
+    <div id="bancoVazio" style="display:none;text-align:center;padding:40px 16px;color:#555;">
+      <div style="font-size:2rem;margin-bottom:8px;">📭</div>
+      <div style="font-size:0.85rem;">Nenhuma auditoria salva ainda.</div>
+      <div style="font-size:0.75rem;margin-top:4px;">Use "Nova Auditoria" para começar.</div>
+    </div>
+  </div>
+</div>
+
+<nav class="stepper" id="stepper">
+  <div class="step-item active" data-step="1" onclick="goStep(1)">
+    <div class="step-num"><span>1</span></div>
+    <div class="step-label">Concurso</div>
+  </div>
+  <div class="step-item locked" data-step="2" onclick="goStep(2)">
+    <div class="step-num"><span>2</span></div>
+    <div class="step-label">Arquivos</div>
+  </div>
+  <div class="step-item locked" data-step="3" onclick="goStep(3)">
+    <div class="step-num"><span>3</span></div>
+    <div class="step-label">Folhas</div>
+  </div>
+  <div class="step-item locked" data-step="4" onclick="goStep(4)">
+    <div class="step-num"><span>4</span></div>
+    <div class="step-label">Corresp.</div>
+  </div>
+  <div class="step-item locked" data-step="5" onclick="goStep(5)">
+    <div class="step-num"><span>5</span></div>
+    <div class="step-label">Indícios</div>
+  </div>
+  <div class="step-item locked" data-step="6" onclick="goStep(6)">
+    <div class="step-num"><span>6</span></div>
+    <div class="step-label">Vagas</div>
+  </div>
+  <div class="step-item locked" data-step="7" onclick="goStep(7)">
+    <div class="step-num"><span>7</span></div>
+    <div class="step-label">Resultado</div>
+  </div>
+  <div class="step-item locked" data-step="8" onclick="goStep(8)">
+    <div class="step-num"><span>8</span></div>
+    <div class="step-label">Relatório</div>
+  </div>
+</nav>
+
+<main class="main" id="main">
+
+  <!-- ===================== ETAPA 1 ===================== -->
+  <div id="step1" class="step-view">
+    <div class="step-header">
+      <div class="step-badge">1</div>
+      <div class="step-header-text">
+        <h2>Configuração do Concurso</h2>
+        <p>Informe os dados básicos do certame a ser auditado</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Dados do Concurso</div>
+      <div class="card-sub">Preencha as informações básicas do certame</div>
+
+      <div class="form-row">
+        <label>Órgão ou Entidade Realizadora</label>
+        <input type="text" id="orgao" placeholder="Ex: Prefeitura Municipal de Lastro" oninput="verificarEtapa1()" />
+      </div>
+
+      <div class="form-row">
+        <label>Início da Validade</label>
+        <input type="date" id="dataInicio" onchange="verificarEtapa1()" />
+      </div>
+
+      <div class="form-row">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+          <label style="margin-bottom:0;">Fim da Validade</label>
+          <label style="display:flex; align-items:center; gap:6px; text-transform:none; letter-spacing:0; font-size:0.82rem; cursor:pointer; color:var(--accent); font-weight:500;">
+            <input type="checkbox" id="concursoValido" checked onchange="toggleConcursoValido()" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;" />
+            Concurso ainda válido
+          </label>
+        </div>
+        <input type="date" id="dataFim" onchange="verificarEtapa1()" disabled style="background:var(--surface2);color:var(--text-muted);" />
+        <div id="dataFimHoje" style="font-size:0.78rem;color:var(--accent);margin-top:5px;font-weight:500;">📅 Usando a data de hoje como fim da validade</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="finalizarEtapa1()" id="btnEtapa1" disabled>
+      Confirmar e Avançar →
+    </button>
+  </div>
+
+  <!-- ===================== ETAPA 2 ===================== -->
+  <div id="step2" class="step-view hidden">
+    <div class="step-header">
+      <div class="step-badge">2</div>
+      <div class="step-header-text">
+        <h2>Arquivos do Concurso</h2>
+        <p>Carregue os dois arquivos XLS exportados do TCE-PB</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Arquivos do TCE-PB</div>
+      <div class="card-sub">Carregue os dois arquivos XLS exportados do Portal de Dados Abertos</div>
+
+      <div class="form-row">
+        <label>Vagas do Concurso (vagasCargoConcurso)</label>
+        <div class="upload-zone" id="zone1">
+          <input type="file" id="fileVagasConcurso" accept=".xls,.xlsx,.csv,.tsv,*/*" onchange="handleFileVagasConcurso(this)" />
+          <div class="upload-icon">📋</div>
+          <div class="upload-label">Toque para selecionar o arquivo</div>
+          <div class="upload-hint">vagasCargo<strong>Concurso</strong>_XX.xls</div>
+        </div>
+        <div id="statusVagasConcurso" class="hidden"></div>
+      </div>
+
+      <div class="form-row">
+        <label>Vagas Criadas por Lei (vagasCargoCriadasPorLei)</label>
+        <div class="upload-zone" id="zone2">
+          <input type="file" id="fileVagasLei" accept=".xls,.xlsx,.csv,.tsv,*/*" onchange="handleFileVagasLei(this)" />
+          <div class="upload-icon">📜</div>
+          <div class="upload-label">Toque para selecionar o arquivo</div>
+          <div class="upload-hint">vagas<strong>CriadasPorLei</strong>_XX.xls</div>
+        </div>
+        <div id="statusVagasLei" class="hidden"></div>
+      </div>
+    </div>
+
+    <div id="previewConcurso" class="card hidden">
+      <div class="card-title">📊 Fotografia do Concurso</div>
+      <div class="summary-grid" id="summaryStep1" style="margin-bottom:14px;"></div>
+      <div style="overflow-x:auto;">
+        <div style="max-height:360px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm);">
+          <table id="tabelaConcurso" style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+            <thead id="tabelaConcursoHead" style="position:sticky;top:0;z-index:2;background:var(--surface2);"></thead>
+            <tbody id="tabelaConcursoBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Voltar</button>
+      <button class="btn btn-primary" onclick="finalizarEtapa2()" id="btnEtapa2" disabled>Confirmar e Avançar →</button>
+    </div>
+  </div>
+
+  <!-- ===================== ETAPA 3 ===================== -->
+  <div id="step3" class="step-view hidden">
+    <div class="step-header">
+      <div class="step-badge">3</div>
+      <div class="step-header-text">
+        <h2>Folhas de Pagamento</h2>
+        <p>Carregue os arquivos CSV de cada ano necessário</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Anos Necessários</div>
+      <div class="card-sub">Com base na validade do concurso, os seguintes anos de folha são necessários</div>
+      <div class="anos-grid" id="anosGrid"></div>
+      <div class="alert alert-info">
+        <span class="alert-icon">ℹ️</span>
+        <span>Carregue um arquivo CSV por ano. Os arquivos devem ser exportados do Portal de Dados Abertos do TCE-PB para o município auditado.</span>
+      </div>
+    </div>
+
+    <div id="uploadFolhasContainer" class="card">
+      <div class="card-title">Upload das Folhas</div>
+      <div class="card-sub">Selecione e carregue cada arquivo</div>
+      <div id="folhasUploadZones"></div>
+    </div>
+
+    <div id="resumoFolhas" class="card hidden">
+      <div class="card-title">Resumo dos Dados Carregados</div>
+      <div class="summary-grid" id="summaryFolhas"></div>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Voltar</button>
+      <button class="btn btn-primary" onclick="finalizarEtapa3()" id="btnEtapa3Folhas" disabled>Avançar →</button>
+    </div>
+  </div>
+
+  <!-- ===================== ETAPA 4 ===================== -->
+  <div id="step4" class="step-view hidden">
+    <div class="step-header">
+      <div class="step-badge">4</div>
+      <div class="step-header-text">
+        <h2>Correspondência de Cargos</h2>
+        <p>Associe cada cargo do concurso aos nomes encontrados nas folhas</p>
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <span class="alert-icon">⚠️</span>
+      <span><strong>Revisão assistida.</strong> O sistema já sugeriu automaticamente as correspondências mais prováveis. Revise, ajuste se necessário e confirme.</span>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progressCorrespondencia" style="width:0%"></div>
+      </div>
+      <div style="font-size:0.75rem; color:var(--text-muted)" id="progressLabel">0 de 0</div>
+    </div>
+
+    <div id="correspondenciaList"></div>
+
+    <div style="margin-top:16px;">
+      <button class="btn btn-primary" onclick="finalizarEtapa4()" id="btnEtapa3" style="background:var(--info);">
+        ✅ Confirmar Todas as Correspondências
+      </button>
+    </div>
+
+    <div style="margin-top:10px;">
+      <button class="btn btn-secondary" onclick="goStep(3)" style="width:100%">← Voltar</button>
+    </div>
+  </div>
+
+  <!-- ===================== ETAPA 5 ===================== -->
+  <div id="step5" class="step-view hidden">
+    <div class="step-header">
+      <div class="step-badge">5</div>
+      <div class="step-header-text">
+        <h2>Indícios de Preterição</h2>
+        <p>Contratações EIP no período de validade com cargo correspondente</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="summary-grid" id="summaryStep4"></div>
+    </div>
+
+    <div class="alert alert-danger hidden" id="alertIndicios">
+      <span class="alert-icon">🚨</span>
+      <span id="alertIndiciosText"></span>
+    </div>
+
+    <div class="alert alert-success hidden" id="alertSemIndicios">
+      <span class="alert-icon">✅</span>
+      <span>Nenhuma contratação EIP com correspondência de cargo foi encontrada dentro do período de validade do concurso.</span>
+    </div>
+
+    <div id="indiciosList"></div>
+
+    <div class="bottom-nav">
+      <button class="btn btn-secondary" onclick="goStep(4)">← Voltar</button>
+      <button class="btn btn-primary" onclick="finalizarEtapa5()">Avançar para Análise →</button>
+    </div>
+  </div>
+
+  <!-- ===================== ETAPA 6 ===================== -->
+  <div id="step6" class="step-view hidden">
+    <div class="step-header">
+      <div class="step-badge">6</div>
+      <div class="step-header-text">
+        <h2>Análise de Vagas</h2>
+        <p>Mapeamento detalhado por cargo — vagas legais vs. ocupação real</p>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">📅</span>
+      <span id="infoUltimoMes">Base de cálculo: último mês dentro da validade do concurso.</span>
+    </div>
+
+    <div class="card">
+      <div class="summary-grid" id="summaryStep5"></div>
+    </div>
+
+    <div id="vagasAnaliseList"></div>
+
+    <div class="bottom-nav">
+      <button class="btn btn-secondary" onclick="goStep(5)">← Voltar</button>
+      <button class="btn btn-primary" onclick="finalizarEtapa6()">Carregar Resultado →</button>
+    </div>
+  </div>
+
+  <!-- ===================== ETAPA 7 ===================== -->
+  <div id="step7" class="step-view hidden">
+    <div class="step-header">
+      <div class="step-badge">7</div>
+      <div class="step-header-text">
+        <h2>Resultado do Concurso</h2>
+        <p>Carregue o CSV do resultado final para identificar os preteridos nominais</p>
+      </div>
+    </div>
+
+    <div class="alert alert-info">
+      <span class="alert-icon">ℹ️</span>
+      <span>Carregue o arquivo CSV do resultado final disponibilizado pelo TCE-PB. O sistema cruzará automaticamente com os dados de preterição já identificados.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Arquivo do Resultado Final</div>
+      <div class="card-sub">Arquivo CSV padrão TCE-PB do resultado oficial do concurso</div>
+      <div class="form-row">
+        <div class="upload-zone" id="zoneResultado">
+          <input type="file" id="fileResultado" accept=".csv,text/csv,text/plain,application/csv,*/*" onchange="handleFileResultado(this)" />
+          <div class="upload-icon">🏆</div>
+          <div class="upload-label">Toque para selecionar o CSV do resultado</div>
+          <div class="upload-hint">Arquivo CSV do resultado final — padrão TCE-PB</div>
+        </div>
+      </div>
+      <div id="resumoResultado" class="hidden">
+        <div class="summary-grid" id="summaryResultado"></div>
+      </div>
+    </div>
+
+    <div class="bottom-nav">
+      <button class="btn btn-secondary" onclick="goStep(6)">← Voltar</button>
+      <button class="btn btn-primary" onclick="finalizarEtapa7()" id="btnEtapa7" disabled>Identificar Preteridos →</button>
+    </div>
+  </div>
+
+  <!-- ===================== ETAPA 8 ===================== -->
+  <div id="step8" class="step-view hidden">
+    <div class="step-header">
+      <div class="step-badge">8</div>
+      <div class="step-header-text">
+        <h2>Relatório de Preterição</h2>
+        <p>Irregulares identificados e preteridos nominais por cargo</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-sub" id="resumoOrgao"></div>
+      <div class="summary-grid" id="summaryFinal"></div>
+    </div>
+
+    <div id="pretericaoList"></div>
+
+    <div class="card" style="margin-top:8px;">
+      <div class="card-title">O que o relatório Excel conterá</div>
+      <div style="font-size:0.82rem; color:var(--text-muted); line-height:1.8;">
+        <div>📋 <strong>Aba 1</strong> — Dados do Concurso</div>
+        <div>🔗 <strong>Aba 2</strong> — Tabela de Correspondência</div>
+        <div>🚨 <strong>Aba 3</strong> — Irregulares por Cargo</div>
+        <div>⚖️ <strong>Aba 4</strong> — Preteridos Nominais</div>
+        <div>📊 <strong>Aba 5</strong> — Análise de Vagas</div>
+        <div>📝 <strong>Aba 6</strong> — Resumo Executivo</div>
+      </div>
+    </div>
+
+    <button class="btn btn-export" onclick="exportarRelatorio()">
+      ⬇️ Exportar Relatório Excel
+    </button>
+
+    <button class="btn btn-primary" onclick="salvarEExportar()" style="margin-top:10px;background:var(--accent);">
+      💾 Salvar Auditoria
+    </button>
+
+    <div style="margin-top:10px">
+      <button class="btn btn-secondary" onclick="goStep(7)" style="width:100%">← Voltar</button>
+    </div>
+  </div>
+
+<!-- MODAL PRETERIDO -->
+<div id="modalPreterido" style="display:none;position:fixed;inset:0;z-index:1000;background:white;display:none;flex-direction:column;">
+
+    <!-- Header fixo -->
+    <div style="background:#1a3a1a;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-shrink:0;">
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.9rem;color:white;white-space:nowrap;">🏆 Preterido</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="salvarContato()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:8px;padding:7px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;">💾 Salvar</button>
+        <button onclick="fecharModal()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:8px;padding:7px 12px;font-size:0.85rem;font-weight:700;cursor:pointer;">✕ Fechar</button>
+      </div>
+    </div>
+
+    <!-- Conteúdo: layout flex coluna, anotações cresce -->
+    <div style="flex:1;display:flex;flex-direction:column;padding:14px 16px;overflow:hidden;">
+
+      <!-- Nome -->
+      <div id="modalNome" style="font-weight:800;font-size:0.95rem;color:#1a3a1a;margin-bottom:10px;line-height:1.3;flex-shrink:0;"></div>
+
+      <!-- Grid de dados -->
+      <div style="background:#f4f7f4;border-radius:10px;padding:12px;margin-bottom:12px;flex-shrink:0;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;">
+          <div>
+            <div style="font-size:0.57rem;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.05em;">Cargo</div>
+            <div id="modalCargo" style="font-size:0.78rem;color:#222;font-weight:600;margin-top:1px;line-height:1.3;"></div>
+          </div>
+          <div>
+            <div style="font-size:0.57rem;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.05em;">Colocação</div>
+            <div id="modalColocacao" style="font-size:0.82rem;color:#dc2626;font-weight:800;margin-top:1px;"></div>
+          </div>
+          <div>
+            <div style="font-size:0.57rem;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.05em;">Nota Final</div>
+            <div id="modalNota" style="font-size:0.78rem;color:#222;font-weight:600;margin-top:1px;"></div>
+          </div>
+          <div>
+            <div style="font-size:0.57rem;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.05em;">Situação</div>
+            <div id="modalStatus" style="font-size:0.78rem;color:#222;font-weight:600;margin-top:1px;"></div>
+          </div>
+          <div>
+            <div style="font-size:0.57rem;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.05em;">Data Nasc.</div>
+            <div id="modalNasc" style="font-size:0.78rem;color:#222;font-weight:600;margin-top:1px;"></div>
+          </div>
+          <div>
+            <div style="font-size:0.57rem;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.05em;">Inscrição</div>
+            <div id="modalInscricao" style="font-size:0.78rem;color:#222;font-weight:600;margin-top:1px;"></div>
+          </div>
+        </div>
+        <!-- CPF com copiar -->
+        <div style="border-top:1px solid #d8e8d8;padding-top:9px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:0.57rem;color:#888;text-transform:uppercase;font-weight:700;letter-spacing:.05em;">CPF</div>
+            <div id="modalCpf" style="font-size:0.85rem;color:#1a3a1a;font-weight:700;margin-top:1px;letter-spacing:.04em;"></div>
+          </div>
+          <button onclick="copiarCpf()" style="background:#1a3a1a;border:none;color:white;border-radius:8px;padding:8px 13px;font-size:0.73rem;font-weight:700;cursor:pointer;white-space:nowrap;">📋 Copiar</button>
+        </div>
+      </div>
+
+      <!-- Contato -->
+      <div style="margin-bottom:10px;flex-shrink:0;">
+        <div style="font-size:0.65rem;font-weight:800;color:#1a3a1a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">📱 Contato</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="modalDdd" type="tel" maxlength="2" placeholder="DDD"
+            style="width:58px;border:1.5px solid #ddd;border-radius:8px;padding:10px 6px;font-size:1rem;text-align:center;box-sizing:border-box;flex-shrink:0;"
+            oninput="this.value=this.value.replace(/\D/g,'')" />
+          <input id="modalCelular" type="tel" maxlength="9" placeholder="9 dígitos"
+            style="flex:1;min-width:0;border:1.5px solid #ddd;border-radius:8px;padding:10px 12px;font-size:1rem;box-sizing:border-box;"
+            oninput="this.value=this.value.replace(/\D/g,'')" />
+          <button onclick="abrirWhatsApp()"
+            style="background:#25d366;border:none;color:white;border-radius:8px;width:44px;height:44px;font-size:1.25rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">📲</button>
+        </div>
+      </div>
+
+      <!-- Anotações — ocupa o restante da tela -->
+      <div style="flex:1;display:flex;flex-direction:column;min-height:0;">
+        <div style="font-size:0.65rem;font-weight:800;color:#1a3a1a;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">📝 Anotações</div>
+        <textarea id="modalAnotacoes" placeholder="Observações sobre este candidato..."
+          style="flex:1;width:100%;border:1.5px solid #ddd;border-radius:8px;padding:10px 12px;font-size:0.88rem;resize:none;box-sizing:border-box;font-family:inherit;"></textarea>
+      </div>
+
+    </div>
+</div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== STATE =====================
+const state = {
+  orgao: '',
+  dataInicio: null,
+  dataFim: null,
+  vagasConcurso: [],
+  vagasLei: [],
+  folhas: [],
+  anosNecessarios: [],
+  anosCarregados: {},
+  cargosEIPFolha: [],
+  correspondencia: {},
+  correspondenciaSem: {},
+  cargoAtualIndex: 0,
+  indicios: [],
+  analiseVagas: [],
+  ultimoMesValido: null,
+  stepAtual: 1,
+  stepLiberado: 1,
+  // Conteúdo bruto dos arquivos para persistência total
+  arquivos: {
+    vagasConcurso: null,    // { nome, conteudo }
+    vagasLei: null,         // { nome, conteudo }
+    folhas: [],             // [{ nome, conteudo }, ...]
+    resultado: null,        // { nome, conteudo }
+  },
+};
+
+// ===================== NAVEGAÇÃO =====================
+function goStep(n) {
+  if (n > state.stepLiberado) return;
+  document.querySelectorAll('.step-view').forEach(el => el.classList.add('hidden'));
+  document.getElementById('step' + n).classList.remove('hidden');
+  document.querySelectorAll('.step-item').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    el.classList.remove('active','done','locked');
+    if (s === n) el.classList.add('active');
+    else if (s < n) el.classList.add('done');
+    else if (s <= state.stepLiberado) el.classList.add('done');
+    else el.classList.add('locked');
+  });
+  state.stepAtual = n;
+  window.scrollTo(0,0);
+}
+
+function liberarStep(n) {
+  if (n > state.stepLiberado) state.stepLiberado = n;
+  document.querySelectorAll('.step-item').forEach(el => {
+    const s = parseInt(el.dataset.step);
+    if (s <= state.stepLiberado) el.classList.remove('locked');
+  });
+}
+
+// ===================== UTILS =====================
+function showToast(msg, duration=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function toggleCollapse(header) {
+  header.parentElement.classList.toggle('collapsed');
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  if (str.includes('/')) {
+    const [d,m,y] = str.split('/');
+    return new Date(+y, +m-1, +d);
+  }
+  return new Date(str);
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  return d.toLocaleDateString('pt-BR');
+}
+
+function normalizeCargo(s) {
+  return s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+}
+
+function extrairNomeCargo(descricao) {
+  return descricao.replace(/^\d+\s*-\s*/, '').trim();
+}
+
+function normNomeCargo(nome) {
+  return (nome || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+}
+
+function hoje() {
+  const d = new Date();
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+// ===================== LEITURA DE ARQUIVOS =====================
+function lerArquivoTexto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+function lerArquivoTextoLatin(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsText(file, 'ISO-8859-1');
+  });
+}
+
+function parseTSV(content) {
+  const lines = content.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].split('\t').map(h => h.trim().replace(/\uFEFF/g,''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split('\t');
+    if (cells.every(c => !c.trim())) continue;
+    const row = {};
+    headers.forEach((h, j) => row[h] = (cells[j] || '').trim());
+    rows.push(row);
+  }
+  return rows;
+}
+
+function parseCSV(content) {
+  const lines = content.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const headers = lines[0].replace(/\uFEFF/g,'').split(';').map(h => h.trim().replace(/"/g,''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = splitCSVLine(lines[i]);
+    if (cells.every(c => !c.trim())) continue;
+    const row = {};
+    headers.forEach((h, j) => row[h] = (cells[j] || '').trim().replace(/"/g,''));
+    rows.push(row);
+  }
+  return rows;
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuote = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuote = !inQuote; continue; }
+    if (ch === ';' && !inQuote) { result.push(current); current = ''; continue; }
+    current += ch;
+  }
+  result.push(current);
+  return result;
+}
+
+// ===================== ETAPA 1 =====================
+function toggleConcursoValido() {
+  const chk = document.getElementById('concursoValido');
+  const inputFim = document.getElementById('dataFim');
+  const avisoHoje = document.getElementById('dataFimHoje');
+  if (chk.checked) {
+    inputFim.disabled = true;
+    inputFim.value = '';
+    inputFim.style.background = 'var(--surface2)';
+    inputFim.style.color = 'var(--text-muted)';
+    avisoHoje.style.display = 'block';
+  } else {
+    inputFim.disabled = false;
+    inputFim.style.background = '';
+    inputFim.style.color = '';
+    avisoHoje.style.display = 'none';
+  }
+  verificarEtapa1();
+}
+
+function verificarEtapa1() {
+  const orgao = document.getElementById('orgao').value.trim();
+  const di = document.getElementById('dataInicio').value;
+  const chk = document.getElementById('concursoValido').checked;
+  const df = chk ? true : document.getElementById('dataFim').value;
+  const ok = orgao && di && df;
+  document.getElementById('btnEtapa1').disabled = !ok;
+}
+
+function finalizarEtapa1() {
+  state.orgao = document.getElementById('orgao').value.trim();
+  state.dataInicio = parseDate(document.getElementById('dataInicio').value);
+
+  const chk = document.getElementById('concursoValido').checked;
+  if (chk) {
+    state.dataFim = hoje();
+  } else {
+    state.dataFim = parseDate(document.getElementById('dataFim').value);
+  }
+
+  if (state.dataFim <= state.dataInicio) {
+    showToast('❌ A data fim deve ser posterior à data de início');
+    return;
+  }
+
+  liberarStep(2);
+  goStep(2);
+}
+
+// ===================== ETAPA 2 =====================
+async function handleFileVagasConcurso(input) {
+  const file = input.files[0];
+  if (!file) return;
+  // Alerta se parecer ser o arquivo errado
+  if (/lei/i.test(file.name)) {
+    showToast('⚠️ Atenção: este parece ser o arquivo de Vagas por Lei. Verifique se selecionou o arquivo correto (vagasCargoConcurso).');
+  }
+  try {
+    let content = await lerArquivoTextoLatin(file);
+    if (!content.includes('\t')) content = await lerArquivoTexto(file);
+
+    const lines = content.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) throw new Error('Arquivo vazio');
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split('\t');
+      if (cells.every(c => !c.trim())) continue;
+      rows.push({
+        CODIGO: (cells[0]||'').trim(),
+        CARGO: fixEncoding((cells[1]||'').trim()),
+        VAGAS_OFEREC: (cells[2]||'').trim(),
+        VAGAS_PCD: (cells[3]||'').trim(),
+        VAGAS_COTAS: (cells[4]||'').trim(),
+        CAD_RESERVA: (cells[5]||'').trim(),
+        TOTAL_VAGAS: (cells[6]||'').trim(),
+      });
+    }
+    if (!rows.length) throw new Error('Arquivo vazio ou formato inválido');
+
+    state.vagasConcurso = rows.map(r => ({
+      codigo: r.CODIGO,
+      cargo: r.CARGO,
+      vagasOferec: parseInt(r.VAGAS_OFEREC) || 0,
+      vagasPCD: parseInt(r.VAGAS_PCD) || 0,
+      vagasCotas: parseInt(r.VAGAS_COTAS) || 0,
+      cadastroReserva: parseInt(r.CAD_RESERVA) || 0,
+      totalVagas: parseInt(r.TOTAL_VAGAS) || 0,
+    })).filter(r => r.cargo);
+
+    // Guardar conteúdo bruto para persistência
+    state.arquivos.vagasConcurso = { nome: file.name, conteudo: content };
+
+    document.getElementById('zone1').classList.add('loaded');
+    document.getElementById('zone1').querySelector('.upload-icon').textContent = '✅';
+    document.getElementById('zone1').querySelector('.upload-label').textContent = file.name;
+    document.getElementById('zone1').querySelector('.upload-hint').textContent = `${state.vagasConcurso.length} cargos carregados`;
+    showToast(`✅ ${state.vagasConcurso.length} cargos do concurso carregados`);
+    verificarEtapa2();
+  } catch(e) {
+    showToast('❌ Erro ao ler arquivo: ' + e.message);
+  }
+}
+
+async function handleFileVagasLei(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (/concurso/i.test(file.name) && !/lei/i.test(file.name)) {
+    showToast('⚠️ Atenção: este parece ser o arquivo do Concurso. Verifique se selecionou o arquivo correto (vagasCargoCriadasPorLei).');
+  }
+  try {
+    let content = await lerArquivoTextoLatin(file);
+    if (!content.includes('\t')) content = await lerArquivoTexto(file);
+
+    const lines = content.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) throw new Error('Arquivo vazio');
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = lines[i].split('\t');
+      if (cells.every(c => !c.trim())) continue;
+      rows.push({
+        CODIGO: (cells[0]||'').trim(),
+        CARGO: fixEncoding((cells[1]||'').trim()),
+        OCUPADOS_ANTES: (cells[2]||'').trim(),
+        DISPONIVEIS: (cells[3]||'').trim(),
+        TOTAL_VAGAS: (cells[4]||'').trim(),
+      });
+    }
+    if (!rows.length) throw new Error('Arquivo vazio ou formato inválido');
+
+    state.vagasLei = rows.map(r => ({
+      codigo: r.CODIGO,
+      cargo: r.CARGO,
+      ocupadosAntes: parseInt(r.OCUPADOS_ANTES) || 0,
+      disponiveis: parseInt(r.DISPONIVEIS) || 0,
+      totalVagas: parseInt(r.TOTAL_VAGAS) || 0,
+    })).filter(r => r.cargo);
+
+    // Guardar conteúdo bruto para persistência
+    state.arquivos.vagasLei = { nome: file.name, conteudo: content };
+
+    document.getElementById('zone2').classList.add('loaded');
+    document.getElementById('zone2').querySelector('.upload-icon').textContent = '✅';
+    document.getElementById('zone2').querySelector('.upload-label').textContent = file.name;
+    document.getElementById('zone2').querySelector('.upload-hint').textContent = `${state.vagasLei.length} cargos carregados`;
+    showToast(`✅ ${state.vagasLei.length} cargos da lei carregados`);
+    verificarEtapa2();
+  } catch(e) {
+    showToast('❌ Erro ao ler arquivo: ' + e.message);
+  }
+}
+
+// Correção de encoding Latin-1 mal interpretado como UTF-8
+function fixEncoding(str) {
+  if (!str) return str;
+  try {
+    // Detecta se há caracteres corrompidos típicos de Latin-1 lido como UTF-8
+    if (!/Ã|Â|ï¿½|â€/.test(str)) return str;
+    const bytes = [];
+    for (let i = 0; i < str.length; i++) bytes.push(str.charCodeAt(i) & 0xff);
+    return new TextDecoder('iso-8859-1').decode(new Uint8Array(bytes));
+  } catch(e) {
+    return str;
+  }
+}
+
+function verificarEtapa2() {
+  const ok = state.vagasConcurso.length > 0 && state.vagasLei.length > 0;
+  document.getElementById('btnEtapa2').disabled = !ok;
+  if (ok) renderPreviewConcurso();
+}
+
+function renderPreviewConcurso() {
+  if (!state.vagasConcurso.length || !state.vagasLei.length) return;
+
+  const totalVagasConcurso = state.vagasConcurso.reduce((s,r) => s + r.totalVagas, 0);
+  const totalVagasLei = state.vagasLei.reduce((s,r) => s + r.totalVagas, 0);
+  const totalOcupados = state.vagasLei.reduce((s,r) => s + r.ocupadosAntes, 0);
+
+  document.getElementById('summaryStep1').innerHTML = `
+    <div class="summary-box">
+      <div class="summary-num">${state.vagasConcurso.length}</div>
+      <div class="summary-lbl">Cargos</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num">${totalVagasLei}</div>
+      <div class="summary-lbl">Vagas na Lei</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num">${totalVagasConcurso}</div>
+      <div class="summary-lbl">Vagas Edital</div>
+    </div>
+  `;
+
+  const lei = {};
+  state.vagasLei.forEach(r => lei[r.codigo] = r);
+
+  // Cabeçalho fixo
+  document.getElementById('tabelaConcursoHead').innerHTML = `<tr>
+    <th style="position:sticky;top:0;background:var(--surface2);z-index:2;">Cargo</th>
+    <th class="num" style="position:sticky;top:0;background:var(--surface2);z-index:2;">Lei</th>
+    <th class="num" style="position:sticky;top:0;background:var(--surface2);z-index:2;">Ocup. Antes</th>
+    <th class="num" style="position:sticky;top:0;background:var(--surface2);z-index:2;">Edital</th>
+  </tr>`;
+
+  let bodyHtml = '';
+  state.vagasConcurso.forEach(r => {
+    const l = lei[r.codigo] || {};
+    bodyHtml += `<tr>
+      <td style="max-width:180px;word-break:break-word;">${r.cargo}</td>
+      <td class="num">${l.totalVagas || '-'}</td>
+      <td class="num">${l.ocupadosAntes !== undefined ? l.ocupadosAntes : '-'}</td>
+      <td class="num">${r.totalVagas}</td>
+    </tr>`;
+  });
+  document.getElementById('tabelaConcursoBody').innerHTML = bodyHtml;
+  document.getElementById('previewConcurso').classList.remove('hidden');
+}
+
+function finalizarEtapa2() {
+  // Calcular anos necessários
+  const anoInicio = state.dataInicio.getFullYear();
+  const anoFim = state.dataFim.getFullYear();
+  state.anosNecessarios = [];
+  for (let a = anoInicio; a <= anoFim; a++) state.anosNecessarios.push(a);
+  state.anosCarregados = {};
+  state.anosNecessarios.forEach(a => state.anosCarregados[a] = false);
+
+  liberarStep(3);
+  goStep(3);
+  renderEtapa3Folhas();
+}
+
+// ===================== ETAPA 3 (Folhas) =====================
+function renderEtapa3Folhas() {
+  const anosGrid = document.getElementById('anosGrid');
+  anosGrid.innerHTML = state.anosNecessarios.map(a =>
+    `<div class="ano-chip ${state.anosCarregados[a] ? 'loaded' : 'needed'}" id="anoChip${a}">
+      ${state.anosCarregados[a] ? '✅' : '📅'} ${a}
+    </div>`
+  ).join('');
+
+  const container = document.getElementById('folhasUploadZones');
+  container.innerHTML = state.anosNecessarios.map(a => `
+    <div class="form-row">
+      <label>Folha de Pagamento — ${a}</label>
+      <div class="upload-zone" id="zoneFolha${a}">
+        <input type="file" accept=".csv" onchange="handleFolha(this, ${a})" />
+        <div class="upload-icon">📄</div>
+        <div class="upload-label">Toque para selecionar o CSV de ${a}</div>
+        <div class="upload-hint">Arquivo CSV do TCE-PB</div>
+      </div>
+    </div>
+  `).join('');
+
+  verificarEtapa3Folhas();
+}
+
+async function handleFolha(input, ano) {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    const content = await lerArquivoTexto(file);
+    const rows = parseCSV(content);
+    if (!rows.length) throw new Error('Arquivo vazio');
+
+    const keys = Object.keys(rows[0]);
+    if (!keys.includes('tipo_cargo')) throw new Error('Formato inválido — campo tipo_cargo não encontrado');
+
+    state.folhas = state.folhas.filter(r => {
+      const a = r.ano_mes ? Math.floor(parseInt(r.ano_mes)/100) : 0;
+      return a !== ano;
+    });
+
+    state.folhas.push(...rows);
+    state.anosCarregados[ano] = true;
+
+    // Guardar conteúdo bruto para persistência
+    state.arquivos.folhas = state.arquivos.folhas.filter(f => f.ano !== ano);
+    state.arquivos.folhas.push({ ano, nome: file.name, conteudo: content });
+
+    const zone = document.getElementById('zoneFolha' + ano);
+    zone.classList.add('loaded');
+    zone.querySelector('.upload-icon').textContent = '✅';
+    zone.querySelector('.upload-label').textContent = file.name;
+    zone.querySelector('.upload-hint').textContent = `${rows.length} registros carregados`;
+
+    const chip = document.getElementById('anoChip' + ano);
+    if (chip) { chip.classList.remove('needed'); chip.classList.add('loaded'); chip.textContent = '✅ ' + ano; }
+
+    showToast(`✅ Folha ${ano} carregada — ${rows.length} registros`);
+    verificarEtapa3Folhas();
+  } catch(e) {
+    showToast('❌ Erro: ' + e.message);
+  }
+}
+
+function verificarEtapa3Folhas() {
+  const todos = state.anosNecessarios.every(a => state.anosCarregados[a]);
+  document.getElementById('btnEtapa3Folhas').disabled = !todos;
+
+  if (todos && state.folhas.length) {
+    const eipTotal = state.folhas.filter(r => r.tipo_cargo === 'Contratação por excepcional interesse público').length;
+    const matriculasEIP = new Set(state.folhas.filter(r => r.tipo_cargo === 'Contratação por excepcional interesse público').map(r => r.matricula)).size;
+    document.getElementById('summaryFolhas').innerHTML = `
+      <div class="summary-box">
+        <div class="summary-num">${state.folhas.length.toLocaleString('pt-BR')}</div>
+        <div class="summary-lbl">Total Registros</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-num" style="color:var(--danger)">${eipTotal.toLocaleString('pt-BR')}</div>
+        <div class="summary-lbl">Reg. EIP</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-num" style="color:var(--danger)">${matriculasEIP}</div>
+        <div class="summary-lbl">EIP Únicos</div>
+      </div>
+    `;
+    document.getElementById('resumoFolhas').classList.remove('hidden');
+  }
+}
+
+function finalizarEtapa3() {
+  // Extrair cargos EIP únicos das folhas dentro da validade
+  const cargosSet = new Set();
+  state.folhas.forEach(r => {
+    if (r.tipo_cargo !== 'Contratação por excepcional interesse público') return;
+    const dataAdm = parseDate(r.data_admissao);
+    if (!dataAdm) return;
+    if (dataAdm < state.dataInicio || dataAdm > state.dataFim) return;
+    if (r.descricao_cargo) cargosSet.add(r.descricao_cargo.trim());
+  });
+  state.cargosEIPFolha = Array.from(cargosSet)
+    .filter(Boolean)
+    .sort((a, b) => extrairNomeCargo(a).localeCompare(extrairNomeCargo(b), 'pt-BR'));
+
+  state.cargoAtualIndex = 0;
+
+  // Pré-calcular correspondências automáticas
+  sugerirCorrespondenciasAutomaticas();
+
+  liberarStep(4);
+  goStep(4);
+  renderEtapa4Correspondencia();
+}
+
+// ===================== SIMILARIDADE DE TEXTO =====================
+function similaridade(a, b) {
+  a = normalizeCargo(extrairNomeCargo(a));
+  b = normalizeCargo(extrairNomeCargo(b));
+  if (a === b) return 1.0;
+  // Expansões comuns de abreviações
+  const expandir = s => s
+    .replace(/\bAG\b\.?/g, 'AGENTE')
+    .replace(/\bADMINIST\b\.?/g, 'ADMINISTRATIVO')
+    .replace(/\bTEC\b\.?/g, 'TECNICO')
+    .replace(/\bENF\b\.?/g, 'ENFERMEIRO')
+    .replace(/\bPROF\b\.?/g, 'PROFESSOR')
+    .replace(/\bAUX\b\.?/g, 'AUXILIAR')
+    .replace(/\bOP\b\.?/g, 'OPERADOR')
+    .replace(/\bMOT\b\.?/g, 'MOTORISTA')
+    .replace(/\bASS\b\.?/g, 'ASSISTENTE')
+    .replace(/\bFISC\b\.?/g, 'FISCAL')
+    .trim();
+  const ae = expandir(a);
+  const be = expandir(b);
+  if (ae === be) return 0.97;
+
+  // Containment
+  if (ae.includes(be) || be.includes(ae)) return 0.9;
+  if (a.includes(b) || b.includes(a)) return 0.85;
+
+  // Palavras em comum
+  const wordsA = new Set(ae.split(/\s+/).filter(w => w.length > 2));
+  const wordsB = new Set(be.split(/\s+/).filter(w => w.length > 2));
+  const inter = [...wordsA].filter(w => wordsB.has(w)).length;
+  const union = new Set([...wordsA, ...wordsB]).size;
+  if (union === 0) return 0;
+  const jaccard = inter / union;
+
+  // Bigramas
+  const bigrams = s => { const bg = new Set(); for(let i=0;i<s.length-1;i++) bg.add(s.slice(i,i+2)); return bg; };
+  const bgA = bigrams(ae.replace(/\s/g,''));
+  const bgB = bigrams(be.replace(/\s/g,''));
+  const bgInter = [...bgA].filter(b => bgB.has(b)).length;
+  const bgUnion = new Set([...bgA,...bgB]).size;
+  const bigramScore = bgUnion > 0 ? bgInter / bgUnion : 0;
+
+  return Math.max(jaccard, bigramScore);
+}
+
+function sugerirCorrespondenciasAutomaticas() {
+  if (!state.correspondenciaSem) state.correspondenciaSem = {};
+  state.vagasConcurso.forEach(cargo => {
+    // Não sobrescrever se já foi definido manualmente
+    const jaDefinido = state.correspondenciaSem[cargo.codigo] ||
+      (state.correspondencia[cargo.codigo] || []).length > 0;
+    if (jaDefinido) return;
+
+    const sugestoes = [];
+    state.cargosEIPFolha.forEach(cFolha => {
+      const score = similaridade(cargo.cargo, cFolha);
+      if (score >= 0.55) sugestoes.push({ cFolha, score });
+    });
+
+    if (sugestoes.length > 0) {
+      sugestoes.sort((a,b) => b.score - a.score);
+      // Pegar todas com score próximo ao melhor (dentro de 0.15)
+      const melhor = sugestoes[0].score;
+      const selecionadas = sugestoes.filter(s => s.score >= melhor - 0.15).map(s => s.cFolha);
+      state.correspondencia[cargo.codigo] = selecionadas;
+    } else {
+      // Nenhuma similaridade — marcar sem correspondência
+      state.correspondenciaSem[cargo.codigo] = true;
+      state.correspondencia[cargo.codigo] = [];
+    }
+  });
+}
+
+// ===================== ETAPA 4 (Correspondência) =====================
+function renderEtapa4Correspondencia() {
+  const total = state.vagasConcurso.length;
+  const idx = state.cargoAtualIndex;
+  const cargo = state.vagasConcurso[idx];
+  if (!cargo) return;
+
+  const selecionados = state.correspondencia[cargo.codigo] || [];
+  const semCorrespondencia = state.correspondenciaSem && state.correspondenciaSem[cargo.codigo];
+
+  const mapeados = state.vagasConcurso.filter(c =>
+    (state.correspondenciaSem && state.correspondenciaSem[c.codigo]) ||
+    (state.correspondencia[c.codigo] || []).length > 0
+  ).length;
+  const pct = total ? Math.round(mapeados / total * 100) : 0;
+  document.getElementById('progressCorrespondencia').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${idx + 1} de ${total} — ${mapeados} cargos definidos`;
+
+  let opcoesHtml = '';
+
+  const selSem = semCorrespondencia ? 'selected' : '';
+  opcoesHtml += `<div class="cargo-folha-chip ${selSem}" onclick="toggleSemCorrespondencia('${cargo.codigo}', this)">
+    <span class="chip-check">${semCorrespondencia ? '✓' : ''}</span>
+    <span>Sem correspondência</span>
+  </div>`;
+
+  if (state.cargosEIPFolha.length === 0) {
+    opcoesHtml += `<span class="none-hint" style="margin-top:8px;display:block;">Nenhum cargo EIP encontrado no período da validade</span>`;
+  } else {
+    state.cargosEIPFolha.forEach(cFolha => {
+      const nomeFolha = extrairNomeCargo(cFolha);
+      const sel = selecionados.includes(cFolha) && !semCorrespondencia;
+      const disabled = semCorrespondencia ? 'style="opacity:0.4;pointer-events:none;"' : '';
+      const escapedFolha = cFolha.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      opcoesHtml += `<div class="cargo-folha-chip ${sel ? 'selected' : ''}" ${disabled}
+        onclick="toggleCorrespondencia('${cargo.codigo}','${escapedFolha}',this)">
+        <span class="chip-check">${sel ? '✓' : ''}</span>
+        <span>${nomeFolha}</span>
+      </div>`;
+    });
+  }
+
+  const nSel = semCorrespondencia ? 0 : selecionados.length;
+  const statusLabel = semCorrespondencia
+    ? '<span style="color:var(--text-muted)">Marcado como sem correspondência</span>'
+    : nSel > 0
+      ? `<span style="color:var(--success)">✓ ${nSel} correspondência${nSel !== 1 ? 's' : ''} selecionada${nSel !== 1 ? 's' : ''}</span>`
+      : '<span style="color:var(--warning)">⚠️ Nenhuma seleção ainda</span>';
+
+  document.getElementById('correspondenciaList').innerHTML = `
+    <div class="card">
+      <div class="cargo-match-header" style="background:var(--accent-light);padding:12px 16px;border-radius:var(--radius-sm);margin-bottom:14px;">
+        <div>
+          <div class="cargo-match-name" style="font-size:1rem;">🏛️ ${cargo.cargo}</div>
+          <div class="cargo-match-vagas" style="margin-top:2px;">${cargo.totalVagas} vaga${cargo.totalVagas !== 1 ? 's' : ''} no edital</div>
+        </div>
+      </div>
+      <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:12px; font-style:italic;">
+        Selecione todos os cargos da folha que correspondem a este. Pode selecionar vários.
+      </div>
+      <div class="cargo-folha-list">${opcoesHtml}</div>
+      <div style="margin-top:12px; font-size:0.78rem;">${statusLabel}</div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:4px;">
+      <button class="btn btn-secondary" style="flex:1;" onclick="navegarCargo(-1)" ${idx === 0 ? 'disabled' : ''}>
+        ← Anterior
+      </button>
+      <button class="btn btn-primary" style="flex:1;" onclick="navegarCargo(1)" ${idx === total - 1 ? 'disabled' : ''}>
+        Próximo →
+      </button>
+    </div>
+    ${idx === total - 1 ? `
+    <div style="margin-top:10px;">
+      <div class="alert alert-info" style="margin-bottom:10px;">
+        <span class="alert-icon">ℹ️</span>
+        <span>Último cargo. Revise as correspondências e confirme quando estiver pronto.</span>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function navegarCargo(direcao) {
+  const total = state.vagasConcurso.length;
+  const novo = state.cargoAtualIndex + direcao;
+  if (novo < 0 || novo >= total) return;
+  state.cargoAtualIndex = novo;
+  window.scrollTo(0, 0);
+  renderEtapa4Correspondencia();
+}
+
+function toggleSemCorrespondencia(codigoCargo, el) {
+  if (!state.correspondenciaSem) state.correspondenciaSem = {};
+  const atual = state.correspondenciaSem[codigoCargo];
+  if (atual) {
+    delete state.correspondenciaSem[codigoCargo];
+  } else {
+    state.correspondenciaSem[codigoCargo] = true;
+    state.correspondencia[codigoCargo] = [];
+  }
+  renderEtapa4Correspondencia();
+}
+
+function toggleCorrespondencia(codigoCargo, nomeFolha, el) {
+  if (state.correspondenciaSem && state.correspondenciaSem[codigoCargo]) {
+    delete state.correspondenciaSem[codigoCargo];
+  }
+  if (!state.correspondencia[codigoCargo]) state.correspondencia[codigoCargo] = [];
+  const arr = state.correspondencia[codigoCargo];
+  const idx = arr.indexOf(nomeFolha);
+  if (idx >= 0) {
+    arr.splice(idx, 1);
+  } else {
+    arr.push(nomeFolha);
+  }
+  renderEtapa4Correspondencia();
+}
+
+function finalizarEtapa4() {
+  if (!state.correspondenciaSem) state.correspondenciaSem = {};
+  const naoDef = state.vagasConcurso.filter(c =>
+    !(state.correspondenciaSem[c.codigo]) &&
+    !(state.correspondencia[c.codigo] || []).length
+  );
+  if (naoDef.length > 0) {
+    const nomes = naoDef.slice(0,3).map(c => c.cargo).join(', ');
+    const extra = naoDef.length > 3 ? ` e mais ${naoDef.length - 3}` : '';
+    showToast(`⚠️ ${naoDef.length} cargo${naoDef.length>1?'s':''} sem definição: ${nomes}${extra}`);
+    const primeiroIdx = state.vagasConcurso.findIndex(c =>
+      !(state.correspondenciaSem[c.codigo]) &&
+      !(state.correspondencia[c.codigo] || []).length
+    );
+    if (primeiroIdx >= 0) { state.cargoAtualIndex = primeiroIdx; renderEtapa4Correspondencia(); }
+    return;
+  }
+  liberarStep(5);
+  goStep(5);
+  processarIndicios();
+}
+
+// ===================== ETAPA 5 (Indícios) =====================
+function formatarMes(anoMes) {
+  const s = String(anoMes);
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const ano = s.slice(0,4);
+  const mes = parseInt(s.slice(4,6));
+  return meses[mes-1] + '/' + ano.slice(2);
+}
+
+function processarIndicios() {
+  const mapa = new Map();
+
+  state.folhas.forEach(r => {
+    if (r.tipo_cargo !== 'Contratação por excepcional interesse público') return;
+
+    const dataAdmissao = parseDate(r.data_admissao);
+    if (!dataAdmissao) return;
+    if (dataAdmissao < state.dataInicio || dataAdmissao > state.dataFim) return;
+
+    const descCargo = (r.descricao_cargo || '').trim();
+
+    let cargoCorrespondente = null;
+    for (const [codigoCargo, folhaCargos] of Object.entries(state.correspondencia)) {
+      if (folhaCargos.includes(descCargo)) {
+        cargoCorrespondente = state.vagasConcurso.find(c => c.codigo === codigoCargo);
+        break;
+      }
+    }
+    if (!cargoCorrespondente) return;
+
+    const cpf = (r.cpf_cnpj || '').trim();
+    const nomeNorm = (r.nome_servidor || '').trim().toUpperCase().replace(/\s+/g,' ');
+    const key = (cpf || nomeNorm) + '||' + cargoCorrespondente.codigo;
+
+    if (!mapa.has(key)) {
+      mapa.set(key, {
+        nome: (r.nome_servidor || '').trim(),
+        cpf: cpf,
+        cargoNomeFolha: extrairNomeCargo(descCargo),
+        cargoConcurso: cargoCorrespondente.cargo,
+        codigoCargo: cargoCorrespondente.codigo,
+        unidade: r.descricao_unidade_gestora || '',
+        admissoes: new Set(),
+        meses: new Set(),
+      });
+    }
+    const entrada = mapa.get(key);
+    const nomeAtual = (r.nome_servidor || '').trim();
+    if (nomeAtual.length > entrada.nome.length) entrada.nome = nomeAtual;
+    if (r.data_admissao) entrada.admissoes.add(r.data_admissao);
+    if (r.ano_mes) entrada.meses.add(String(r.ano_mes));
+  });
+
+  state.indicios = Array.from(mapa.values()).map(i => ({
+    ...i,
+    admissoes: Array.from(i.admissoes).sort((a,b) => parseDate(a) - parseDate(b)),
+    meses: Array.from(i.meses).sort(),
+  }));
+
+  renderEtapa5Indicios();
+}
+
+function renderEtapa5Indicios() {
+  const total = state.indicios.length;
+  const cargosAfetados = new Set(state.indicios.map(i => i.codigoCargo)).size;
+
+  document.getElementById('summaryStep4').innerHTML = `
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--danger)">${total}</div>
+      <div class="summary-lbl">Servidores</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--warning)">${cargosAfetados}</div>
+      <div class="summary-lbl">Cargos</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--danger)">${state.indicios.reduce((s,i) => s + i.meses.length, 0)}</div>
+      <div class="summary-lbl">Ocorrências</div>
+    </div>
+  `;
+
+  if (total === 0) {
+    document.getElementById('alertSemIndicios').classList.remove('hidden');
+    document.getElementById('alertIndicios').classList.add('hidden');
+    document.getElementById('indiciosList').innerHTML = '';
+  } else {
+    document.getElementById('alertIndicios').classList.remove('hidden');
+    document.getElementById('alertSemIndicios').classList.add('hidden');
+    document.getElementById('alertIndiciosText').textContent =
+      `${total} servidor${total !== 1 ? 'es' : ''} contratado${total !== 1 ? 's' : ''} por Excepcional Interesse Público em cargo correspondente ao concurso vigente, dentro do prazo de validade. Possível preterição.`;
+
+    const porCargo = {};
+    state.indicios.forEach(i => {
+      if (!porCargo[i.codigoCargo]) porCargo[i.codigoCargo] = { cargo: i.cargoConcurso, items: [] };
+      porCargo[i.codigoCargo].items.push(i);
+    });
+
+    Object.values(porCargo).forEach(g => g.items.sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR')));
+
+    let html = '';
+    Object.values(porCargo).forEach(grupo => {
+      html += `<div class="card">
+        <div class="collapsible-header" onclick="toggleCollapse(this)">
+          <h3>🚨 ${grupo.cargo} <span style="font-weight:400;font-size:0.8rem;color:var(--danger)">(${grupo.items.length} servidor${grupo.items.length !== 1 ? 'es' : ''})</span></h3>
+          <span class="collapse-arrow">▼</span>
+        </div>
+        <div class="collapsible-body">`;
+
+      grupo.items.forEach(i => {
+        const admTags = i.admissoes.map(d =>
+          `<span class="servidor-tag" style="background:var(--danger-light);color:var(--danger);border-color:#f0b0b0;font-weight:600;">🔴 Admissão: ${d}</span>`
+        ).join('');
+        const mesesTags = i.meses.map(m =>
+          `<span class="servidor-tag" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid);">📅 ${formatarMes(m)}</span>`
+        ).join('');
+
+        html += `<div class="servidor-item">
+          <div class="servidor-nome">${i.nome}</div>
+          <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px;">${i.cargoNomeFolha} &nbsp;·&nbsp; 🏢 ${i.unidade}</div>
+          <div class="servidor-meta" style="margin-bottom:6px; flex-wrap:wrap;">${admTags}</div>
+          <div class="servidor-meta" style="flex-wrap:wrap;">${mesesTags}</div>
+        </div>`;
+      });
+
+      html += `</div></div>`;
+    });
+
+    document.getElementById('indiciosList').innerHTML = html;
+  }
+}
+
+function finalizarEtapa5() {
+  liberarStep(6);
+  goStep(6);
+  processarAnaliseVagas();
+}
+
+// ===================== ETAPA 6 (Análise de Vagas) =====================
+function processarAnaliseVagas() {
+  const anoMesFim = state.dataFim.getFullYear() * 100 + (state.dataFim.getMonth() + 1);
+  let ultimoMes = 0;
+  state.folhas.forEach(r => {
+    const am = parseInt(r.ano_mes);
+    if (am <= anoMesFim && am > ultimoMes) ultimoMes = am;
+  });
+  state.ultimoMesValido = ultimoMes;
+
+  const anoUltimo = Math.floor(ultimoMes / 100);
+  const mesUltimo = ultimoMes % 100;
+  document.getElementById('infoUltimoMes').textContent =
+    `Base de cálculo: ${mesUltimo.toString().padStart(2,'0')}/${anoUltimo} (último mês dentro da validade do concurso).`;
+
+  const analise = [];
+  const lei = {};
+  state.vagasLei.forEach(r => lei[r.codigo] = r);
+
+  state.vagasConcurso.forEach(cargo => {
+    const folhaCargos = state.correspondencia[cargo.codigo] || [];
+    if (!folhaCargos.length) return;
+    const leiCargo = lei[cargo.codigo] || {};
+
+    const nomesCorrespondencia = new Set(
+      folhaCargos.map(c => normNomeCargo(extrairNomeCargo(c)))
+    );
+    nomesCorrespondencia.add(normNomeCargo(cargo.cargo));
+
+    const matchCargo = (nomeEfetivo) => {
+      const n = normNomeCargo(nomeEfetivo);
+      return Array.from(nomesCorrespondencia).some(nc => n === nc);
+    };
+
+    // Efetivos admitidos DENTRO da validade — usado apenas para identificar o marco
+    const efetivos = new Set();
+    state.folhas.forEach(r => {
+      if (r.tipo_cargo !== 'Efetivos') return;
+      const dataAdm = parseDate(r.data_admissao);
+      if (!dataAdm || dataAdm < state.dataInicio || dataAdm > state.dataFim) return;
+      if (!matchCargo(extrairNomeCargo((r.descricao_cargo || '').trim()))) return;
+      efetivos.add(r.cpf_cnpj || r.matricula);
+    });
+
+    // Encontrar o mês mais recente com efetivos para este cargo
+    let ultimoMesCargo = 0;
+    state.folhas.forEach(r => {
+      if (r.tipo_cargo !== 'Efetivos') return;
+      const am = parseInt(r.ano_mes);
+      if (am > ultimoMesCargo && am <= parseInt(String(ultimoMes))) {
+        if (matchCargo(extrairNomeCargo((r.descricao_cargo || '').trim()))) {
+          ultimoMesCargo = am;
+        }
+      }
+    });
+    if (!ultimoMesCargo) ultimoMesCargo = ultimoMes;
+
+    // Contar efetivos ativos no mês mais recente com dados para este cargo — SEM filtro de data de admissão
+    const efetivosUltimoMes = new Set();
+    state.folhas.forEach(r => {
+      if (parseInt(r.ano_mes) !== ultimoMesCargo) return;
+      if (r.tipo_cargo !== 'Efetivos') return;
+      if (!matchCargo(extrairNomeCargo((r.descricao_cargo || '').trim()))) return;
+      efetivosUltimoMes.add(r.cpf_cnpj || r.matricula);
+    });
+
+    // Irregulares = QUALQUER tipo_cargo que não seja Efetivos, em todas as folhas, dentro da validade
+    const irregularesMap = new Map();
+    state.folhas.forEach(r => {
+      if (r.tipo_cargo === 'Efetivos') return;
+      const dataAdm = parseDate(r.data_admissao);
+      if (!dataAdm || dataAdm < state.dataInicio || dataAdm > state.dataFim) return;
+      // Comparar pelo nome do cargo (sem código interno), não pelo código
+      const nomeIrreg = extrairNomeCargo((r.descricao_cargo || '').trim()).toUpperCase().trim();
+      if (!matchCargo(nomeIrreg)) return;
+      const cpfKey = (r.cpf_cnpj || '').trim() ||
+                     (r.nome_servidor || '').trim().toUpperCase().replace(/\s+/g,' ');
+      if (!irregularesMap.has(cpfKey)) {
+        irregularesMap.set(cpfKey, { ...r, meses: new Set(), admissoes: new Set() });
+      }
+      const entrada = irregularesMap.get(cpfKey);
+      const nomeAtual = (r.nome_servidor || '').trim();
+      if (nomeAtual.length > (entrada.nome_servidor||'').length) entrada.nome_servidor = nomeAtual;
+      if (r.ano_mes) entrada.meses.add(String(r.ano_mes));
+      if (r.data_admissao) entrada.admissoes.add(r.data_admissao);
+    });
+    irregularesMap.forEach(v => {
+      v.meses = Array.from(v.meses).sort();
+      v.admissoes = Array.from(v.admissoes).sort((a,b) => parseDate(a) - parseDate(b));
+    });
+
+    const totalLei = leiCargo.totalVagas || 0;
+    const nEfetivos = efetivosUltimoMes.size;
+    const cargosVagos = Math.max(0, totalLei - nEfetivos);
+    const vagasDisponiveis = cargosVagos;
+    const nIrregulares = irregularesMap.size;
+    const nEIP = nIrregulares; // mantém compatibilidade
+    const eipIrregulares = Math.min(nIrregulares, vagasDisponiveis);
+    const eipExcedentes = Math.max(0, nIrregulares - vagasDisponiveis);
+    const preteridos = eipIrregulares >= 1 ? Math.min(eipIrregulares, cargosVagos) : 0;
+
+    // Marco: último efetivo admitido dentro da validade (em qualquer folha)
+    let marcoNome = null;
+    let marcoData = null;
+    efetivos.forEach(cpfKey => {
+      // buscar o registro correspondente
+    });
+    // Buscar nos registros o último efetivo admitido dentro da validade
+    const efetivosRegistros = [];
+    state.folhas.forEach(r => {
+      if (r.tipo_cargo !== 'Efetivos') return;
+      const dataAdm = parseDate(r.data_admissao);
+      if (!dataAdm || dataAdm < state.dataInicio || dataAdm > state.dataFim) return;
+      if (!matchCargo(extrairNomeCargo((r.descricao_cargo || '').trim()))) return;
+      efetivosRegistros.push({ nome: (r.nome_servidor||'').trim(), dataAdm });
+    });
+    // Único por nome, pegar o de maior data
+    const efetivosUnicos = new Map();
+    efetivosRegistros.forEach(e => {
+      const key = e.nome.toUpperCase().replace(/\s+/g,' ');
+      if (!efetivosUnicos.has(key) || e.dataAdm > efetivosUnicos.get(key).dataAdm) {
+        efetivosUnicos.set(key, e);
+      }
+    });
+    if (efetivosUnicos.size > 0) {
+      const sorted = Array.from(efetivosUnicos.values()).sort((a,b) => b.dataAdm - a.dataAdm);
+      marcoNome = sorted[0].nome;
+      marcoData = sorted[0].dataAdm;
+    }
+
+    let status = 'ok';
+    if (eipIrregulares > 0) status = 'critico';
+    else if (nIrregulares > 0) status = 'atencao';
+
+    analise.push({
+      codigo: cargo.codigo,
+      cargo: cargo.cargo,
+      vagasEdital: cargo.totalVagas,
+      totalLei,
+      ocupadosAntes: leiCargo.ocupadosAntes || 0,
+      nEfetivos,
+      cargosVagos,
+      vagasDisponiveis,
+      nEIP,
+      eipIrregulares,
+      eipExcedentes,
+      preteridos,
+      marcoNome,
+      marcoData,
+      status,
+      servidoresEIP: Array.from(irregularesMap.values()),
+    });
+  });
+
+  state.analiseVagas = analise;
+  renderEtapa6Vagas();
+}
+
+function renderEtapa6Vagas() {
+  const criticos = state.analiseVagas.filter(a => a.status === 'critico').length;
+  const atencao = state.analiseVagas.filter(a => a.status === 'atencao').length;
+  const totalEIPirr = state.analiseVagas.reduce((s,a) => s + a.eipIrregulares, 0);
+
+  document.getElementById('summaryStep5').innerHTML = `
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--danger)">${criticos}</div>
+      <div class="summary-lbl">Cargos Críticos</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--danger)">${totalEIPirr}</div>
+      <div class="summary-lbl">EIP Irregulares</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--warning)">${atencao}</div>
+      <div class="summary-lbl">Em Atenção</div>
+    </div>
+  `;
+
+  let html = '';
+  const ordenado = [...state.analiseVagas].sort((a,b) => {
+    const ord = {critico:0, atencao:1, ok:2};
+    return ord[a.status] - ord[b.status];
+  });
+
+  ordenado.forEach(a => {
+    const totalBar = a.totalLei || 1;
+    const pEfetivo = Math.min(100, Math.round(a.nEfetivos / totalBar * 100));
+    const pIrr = Math.min(100 - pEfetivo, Math.round(a.eipIrregulares / totalBar * 100));
+    const pExc = Math.min(100 - pEfetivo - pIrr, Math.round(a.eipExcedentes / totalBar * 100));
+
+    const statusLabel = {critico:'🚨 Preterição', atencao:'⚠️ Atenção', ok:'✅ Regular'};
+    const badgeClass = {critico:'badge-red', atencao:'badge-yellow', ok:'badge-green'};
+
+    html += `<div class="vaga-card">
+      <div class="vaga-card-header ${a.status}">
+        <div class="vaga-cargo-name">${a.cargo}</div>
+        <span class="badge ${badgeClass[a.status]}">${statusLabel[a.status]}</span>
+      </div>
+      <div class="vaga-card-body">
+        <div class="vaga-metrics">
+          <div class="vaga-metric">
+            <div class="vaga-metric-label">Vagas na Lei</div>
+            <div class="vaga-metric-value">${a.totalLei}</div>
+          </div>
+          <div class="vaga-metric">
+            <div class="vaga-metric-label">Efetivos Ativos</div>
+            <div class="vaga-metric-value green">${a.nEfetivos}</div>
+          </div>
+          <div class="vaga-metric">
+            <div class="vaga-metric-label">Cargos Vagos</div>
+            <div class="vaga-metric-value ${a.cargosVagos > 0 ? 'orange' : 'green'}">${a.cargosVagos}</div>
+          </div>
+          <div class="vaga-metric">
+            <div class="vaga-metric-label">EIP no Período</div>
+            <div class="vaga-metric-value ${a.nEIP > 0 ? 'red' : ''}">${a.nEIP}</div>
+          </div>
+          <div class="vaga-metric">
+            <div class="vaga-metric-label">EIP Irregulares</div>
+            <div class="vaga-metric-value ${a.eipIrregulares > 0 ? 'red' : ''}">${a.eipIrregulares}</div>
+          </div>
+          <div class="vaga-metric">
+            <div class="vaga-metric-label">Preteridos</div>
+            <div class="vaga-metric-value ${a.preteridos > 0 ? 'red' : ''}">${a.preteridos}</div>
+          </div>
+        </div>
+
+        ${a.eipIrregulares > 0 ? `
+        <div class="alert alert-danger" style="margin-bottom:10px;">
+          <span class="alert-icon">🚨</span>
+          <span><strong>${a.eipIrregulares} vaga${a.eipIrregulares !== 1 ? 's' : ''}</strong> disponível${a.eipIrregulares !== 1 ? 'is' : ''} preenchida${a.eipIrregulares !== 1 ? 's' : ''} por EIP dentro da validade — possível preterição.
+          ${a.eipExcedentes > 0 ? `Mais <strong>${a.eipExcedentes}</strong> EIP excedente${a.eipExcedentes !== 1 ? 's' : ''} ao quadro legal.` : ''}</span>
+        </div>` : ''}
+
+        <div class="vaga-bar-wrap">
+          <div class="vaga-bar-label">Composição das ${a.totalLei} vagas legais</div>
+          <div class="vaga-bar">
+            <div class="vaga-bar-seg seg-efetivo" style="width:${pEfetivo}%"></div>
+            <div class="vaga-bar-seg seg-eip-irregular" style="width:${pIrr}%"></div>
+            <div class="vaga-bar-seg seg-eip-excedente" style="width:${pExc}%"></div>
+          </div>
+          <div class="vaga-bar-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent-mid)"></div> Efetivos (${a.nEfetivos})</div>
+            ${a.eipIrregulares > 0 ? `<div class="legend-item"><div class="legend-dot" style="background:var(--danger)"></div> EIP irregulares (${a.eipIrregulares})</div>` : ''}
+            ${a.eipExcedentes > 0 ? `<div class="legend-item"><div class="legend-dot" style="background:var(--warning)"></div> EIP excedentes (${a.eipExcedentes})</div>` : ''}
+          </div>
+        </div>
+
+        ${a.servidoresEIP.length > 0 ? `
+        <div style="margin-top:12px;">
+          <div class="collapsible-header collapsed" onclick="toggleCollapse(this)">
+            <h3 style="font-size:0.8rem; color:var(--text-muted);">Ver ${a.servidoresEIP.length} servidor${a.servidoresEIP.length !== 1 ? 'es' : ''} EIP</h3>
+            <span class="collapse-arrow">▼</span>
+          </div>
+          <div class="collapsible-body">
+            ${a.servidoresEIP.map(s => {
+              const admTags = (s.admissoes||[s.data_admissao]).map(d =>
+                `<span class="servidor-tag" style="background:var(--danger-light);color:var(--danger);border-color:#f0b0b0;font-weight:600;">🔴 ${d}</span>`
+              ).join('');
+              const mesesTags = (s.meses||[]).map(m =>
+                `<span class="servidor-tag" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid);">📅 ${formatarMes(m)}</span>`
+              ).join('');
+              return `<div class="servidor-item">
+                <div class="servidor-nome">${(s.nome_servidor||'').trim()}</div>
+                <div class="servidor-meta" style="margin-bottom:4px;flex-wrap:wrap;">${admTags}</div>
+                <div class="servidor-meta" style="flex-wrap:wrap;">${mesesTags}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>` : ''}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('vagasAnaliseList').innerHTML = html;
+}
+
+function finalizarEtapa6() {
+  liberarStep(7);
+  goStep(7);
+}
+
+// ===================== ETAPA 7 (Resultado do Concurso) =====================
+async function handleFileResultado(input) {
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    let content = await lerArquivoTextoLatin(file);
+    if (content.split(';').length < 3) content = await lerArquivoTexto(file);
+
+    const rows = parseCSV(content);
+    if (!rows.length) throw new Error('Arquivo vazio');
+
+    // Detectar colunas
+    const keys = Object.keys(rows[0]);
+    const colInscricao = keys.find(k => /inscri/i.test(k)) || keys[0];
+    const colNome = keys.find(k => /nome/i.test(k)) || keys[1];
+    const colCpf = keys.find(k => /cpf/i.test(k)) || null;
+    const colNasc = keys.find(k => /nasc/i.test(k)) || null;
+    const colCodCargo = keys.find(k => /c[oó]d.*cargo|cargo.*c[oó]d/i.test(k)) || keys[4];
+    const colNota = keys.find(k => /nota.final/i.test(k)) || keys[10];
+    const colClass = keys.find(k => /classifica/i.test(k) && !/status/i.test(k)) || keys[11];
+    const colStatus = keys.find(k => /status/i.test(k)) || keys[12];
+
+    state.resultadoConcurso = rows.map(r => ({
+      inscricao: (r[colInscricao]||'').trim(),
+      nome: (r[colNome]||'').trim(),
+      cpf: colCpf ? (r[colCpf]||'').trim() : '',
+      dataNasc: colNasc ? (r[colNasc]||'').trim() : '',
+      codigoCargo: String(parseInt((r[colCodCargo]||'').trim()) || 0),
+      notaFinal: parseFloat((r[colNota]||'0').replace(',','.')) || 0,
+      classificacao: parseInt((r[colClass]||'0')) || 0,
+      status: (r[colStatus]||'').trim(),
+    })).filter(r => r.nome && r.codigoCargo !== '0');
+
+    // Guardar conteúdo bruto para persistência
+    state.arquivos.resultado = { nome: file.name, conteudo: content };
+
+    const cargosUnicos = new Set(state.resultadoConcurso.map(r => r.codigoCargo)).size;
+    const totalCandidatos = state.resultadoConcurso.length;
+
+    document.getElementById('zoneResultado').classList.add('loaded');
+    document.getElementById('zoneResultado').querySelector('.upload-icon').textContent = '✅';
+    document.getElementById('zoneResultado').querySelector('.upload-label').textContent = file.name;
+    document.getElementById('zoneResultado').querySelector('.upload-hint').textContent = `${totalCandidatos} candidatos em ${cargosUnicos} cargos`;
+
+    document.getElementById('summaryResultado').innerHTML = `
+      <div class="summary-box">
+        <div class="summary-num">${cargosUnicos}</div>
+        <div class="summary-lbl">Cargos</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-num">${totalCandidatos}</div>
+        <div class="summary-lbl">Candidatos</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-num" style="color:var(--accent)">${state.resultadoConcurso.filter(r=>r.status==='APROVADO').length}</div>
+        <div class="summary-lbl">Aprovados</div>
+      </div>
+    `;
+    document.getElementById('resumoResultado').classList.remove('hidden');
+    document.getElementById('btnEtapa7').disabled = false;
+    showToast(`✅ ${totalCandidatos} candidatos carregados`);
+  } catch(e) {
+    showToast('❌ Erro ao ler arquivo: ' + e.message);
+  }
+}
+
+function finalizarEtapa7() {
+  processarPreteridosNominais();
+  liberarStep(8);
+  goStep(8);
+  renderEtapa8();
+}
+
+function normalizarNome(n) {
+  return (n||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+}
+
+function similaridadeNome(a, b) {
+  a = normalizarNome(a);
+  b = normalizarNome(b);
+  if (a === b) return 1.0;
+  // Verifica se todas as palavras de um estão no outro
+  const wordsA = a.split(' ').filter(w => w.length > 2);
+  const wordsB = b.split(' ').filter(w => w.length > 2);
+  const inter = wordsA.filter(w => wordsB.includes(w)).length;
+  const maxLen = Math.max(wordsA.length, wordsB.length);
+  return maxLen > 0 ? inter / maxLen : 0;
+}
+
+function processarPreteridosNominais() {
+  if (!state.resultadoConcurso) { state.preteridosNominais = []; return; }
+
+  state.preteridosNominais = [];
+
+  state.analiseVagas.forEach(a => {
+    if (a.preteridos === 0) return;
+
+    // Candidatos deste cargo no resultado, ordenados por classificação
+    // Normaliza código removendo zeros à esquerda para comparação
+    const codigoNorm = String(parseInt(a.codigo) || 0);
+    const candidatos = state.resultadoConcurso
+      .filter(r => String(parseInt(r.codigoCargo)||0) === codigoNorm)
+      .sort((x,y) => x.classificacao - y.classificacao);
+
+    if (!candidatos.length) return;
+
+    // Encontrar posição do marco (último efetivo admitido dentro da validade)
+    let marcoPosicao = 0;
+    if (a.marcoNome) {
+      let melhorScore = 0;
+      let melhorIdx = -1;
+      candidatos.forEach((c, idx) => {
+        const score = similaridadeNome(c.nome, a.marcoNome);
+        if (score > melhorScore) { melhorScore = score; melhorIdx = idx; }
+      });
+      if (melhorScore >= 0.6) marcoPosicao = melhorIdx + 1; // posição 1-based
+    }
+
+    // Preteridos são os N candidatos após o marco
+    const preteridosList = candidatos.slice(marcoPosicao, marcoPosicao + a.preteridos);
+
+    // Se não há candidatos identificáveis após o marco, não houve preterição nominal
+    if (preteridosList.length === 0) return;
+
+    state.preteridosNominais.push({
+      codigo: a.codigo,
+      cargo: a.cargo,
+      marcoNome: a.marcoNome,
+      marcoPosicao,
+      nIrregulares: a.eipIrregulares,
+      nPreteridos: a.preteridos,
+      irregulares: a.servidoresEIP,
+      preteridos: preteridosList,
+    });
+  });
+}
+
+// ===================== ETAPA 8 (Relatório de Preterição) =====================
+const _preteridosMap = new Map();
+
+function renderEtapa8() {
+  const totalPreteridos = state.preteridosNominais.reduce((s,p) => s + p.preteridos.length, 0);
+  const totalIrregulares = state.preteridosNominais.reduce((s,p) => s + p.nIrregulares, 0);
+  const totalCargos = state.preteridosNominais.length;
+
+  const dataFimLabel = document.getElementById('concursoValido') && document.getElementById('concursoValido').checked
+    ? `${formatDate(state.dataFim)} (hoje)` : formatDate(state.dataFim);
+
+  document.getElementById('resumoOrgao').textContent =
+    `${state.orgao} — Concurso válido de ${formatDate(state.dataInicio)} a ${dataFimLabel}`;
+
+  document.getElementById('summaryFinal').innerHTML = `
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--danger)">${totalCargos}</div>
+      <div class="summary-lbl">Cargos com Preterição</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--warning)">${totalIrregulares}</div>
+      <div class="summary-lbl">Preferidos Ilegalmente</div>
+    </div>
+    <div class="summary-box">
+      <div class="summary-num" style="color:var(--danger)">${totalPreteridos}</div>
+      <div class="summary-lbl">Preteridos</div>
+    </div>
+  `;
+
+  if (!state.preteridosNominais.length) {
+    document.getElementById('pretericaoList').innerHTML = `
+      <div class="alert alert-success">
+        <span class="alert-icon">✅</span>
+        <span>Nenhum cargo com preterição confirmada identificado.</span>
+      </div>`;
+    return;
+  }
+
+  let html = '';
+  _preteridosMap.clear();
+  state.preteridosNominais.forEach(p => {
+    const marcoLabel = p.marcoPosicao > 0
+      ? `Último nomeado: <strong>${p.marcoNome}</strong> (${p.marcoPosicao}º)`
+      : `Nenhum efetivo nomeado — marco: posição 0`;
+
+    // Criar pares: apenas irregulares com preterido identificado
+    const nPares = Math.min(p.irregulares.length, p.preteridos.length);
+    let paresHtml = '';
+    for (let i = 0; i < nPares; i++) {
+      const irr = p.irregulares[i];
+      const pret = p.preteridos[i];
+      const vinculo = irr ? (irr.tipo_cargo||'')
+        .replace('Contratação por excepcional interesse público','EIP')
+        .replace('Cargo Comissionado','Comissionado') : null;
+
+      let mapKey = null;
+      if (pret) {
+        mapKey = `${p.cargo}||${p.marcoPosicao + i + 1}`;
+        _preteridosMap.set(mapKey, { cargo: p.cargo, colocacao: p.marcoPosicao + i + 1, ...pret });
+      }
+
+      paresHtml += `
+      <div style="display:grid;grid-template-columns:1fr 28px 1fr;align-items:center;gap:6px;margin-bottom:10px;">
+
+        <!-- PREFERIDO -->
+        <div style="background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.35);border-radius:10px;padding:10px;">
+          <div style="font-size:0.62rem;font-weight:700;color:var(--warning);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">⚠️ Preferido</div>
+          ${irr ? `
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text-main);line-height:1.3;">${(irr.nome_servidor||'').trim()}</div>
+            <div style="font-size:0.65rem;color:var(--warning);margin-top:3px;">${vinculo}</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);">Adm: ${(irr.admissoes||[irr.data_admissao])[0]}</div>
+          ` : `<div style="font-size:0.72rem;color:var(--text-muted);font-style:italic;">—</div>`}
+        </div>
+
+        <!-- VS -->
+        <div style="text-align:center;font-size:0.65rem;font-weight:800;color:var(--text-muted);opacity:0.6;">VS</div>
+
+        <!-- PRETERIDO -->
+        <div onclick="${mapKey ? `abrirModalPreterido('${mapKey.replace(/'/g,"\\'")}')` : ''}"
+          style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:10px;${pret ? 'cursor:pointer;' : ''}">
+          <div style="font-size:0.62rem;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">🏆 Preterido</div>
+          ${pret ? `
+            <div style="font-size:0.8rem;font-weight:700;color:var(--text-main);line-height:1.3;">${pret.nome}</div>
+            <div style="font-size:0.65rem;color:var(--danger);margin-top:3px;">${p.marcoPosicao + i + 1}º colocado · Nota ${pret.notaFinal}</div>
+            <div style="font-size:0.65rem;color:var(--text-muted);">${pret.status}</div>
+            <div style="font-size:0.6rem;color:var(--accent);margin-top:4px;font-weight:600;">Toque para detalhes →</div>
+          ` : `<div style="font-size:0.72rem;color:var(--text-muted);font-style:italic;">Não identificado</div>`}
+        </div>
+
+      </div>`;
+    }
+
+    html += `
+    <div class="card" style="border-left:4px solid var(--danger);">
+      <div style="margin-bottom:12px;">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:var(--danger);">🚨 ${p.cargo}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:3px;">${marcoLabel}</div>
+      </div>
+      ${paresHtml}
+    </div>`;
+  });
+
+  document.getElementById('pretericaoList').innerHTML = html;
+}
+
+// ===================== EXPORTAÇÃO EXCEL =====================
+function exportarRelatorio() {
+  // Helper: calcula largura automática de colunas
+  function autoWidth(ws, data) {
+    const cols = [];
+    data.forEach(row => {
+      row.forEach((cell, i) => {
+        const len = cell ? String(cell).length : 8;
+        cols[i] = Math.min(Math.max(cols[i] || 8, len + 2), 60);
+      });
+    });
+    ws['!cols'] = cols.map(w => ({ wch: w }));
+    return ws;
+  }
+
+  try {
+    const wb = XLSX.utils.book_new();
+
+    // ABA 1 — Dados do Concurso
+    const lei = {};
+    state.vagasLei.forEach(r => lei[r.codigo] = r);
+    const aba1 = [
+      ['AUDITORIA DE PRETERIÇÃO — DADOS DO CONCURSO'],
+      [''],
+      ['Órgão/Entidade', state.orgao],
+      ['Início da Validade', formatDate(state.dataInicio)],
+      ['Fim da Validade', formatDate(state.dataFim)],
+      [''],
+      ['CARGO', 'VAGAS EDITAL', 'VAGAS PCD', 'VAGAS COTAS', 'CAD. RESERVA', 'TOTAL EDITAL', 'VAGAS NA LEI', 'OCUPADOS ANTES', 'DISPONÍVEIS'],
+    ];
+    state.vagasConcurso.forEach(c => {
+      const l = lei[c.codigo] || {};
+      aba1.push([c.cargo, c.vagasOferec, c.vagasPCD, c.vagasCotas, c.cadastroReserva, c.totalVagas, l.totalVagas||0, l.ocupadosAntes||0, l.disponiveis||0]);
+    });
+    XLSX.utils.book_append_sheet(wb, autoWidth(XLSX.utils.aoa_to_sheet(aba1), aba1), 'Dados do Concurso');
+
+    // ABA 2 — Correspondência
+    const aba2 = [['CARGO DO CONCURSO', 'CORRESPONDÊNCIAS NA FOLHA DE PAGAMENTO']];
+    state.vagasConcurso.forEach(c => {
+      const corr = (state.correspondencia[c.codigo] || []).map(extrairNomeCargo).join('; ');
+      aba2.push([c.cargo, corr || '(sem correspondência)']);
+    });
+    XLSX.utils.book_append_sheet(wb, autoWidth(XLSX.utils.aoa_to_sheet(aba2), aba2), 'Tabela de Correspondência');
+
+    // ABA 3 — Irregulares por cargo
+    const aba3 = [['CARGO', 'NOME DO IRREGULAR', 'TIPO DE VÍNCULO', 'DATA DE ADMISSÃO', 'MESES NA FOLHA']];
+    (state.preteridosNominais || []).forEach(p => {
+      p.irregulares.forEach(i => {
+        aba3.push([
+          p.cargo,
+          (i.nome_servidor||'').trim(),
+          i.tipo_cargo,
+          (i.admissoes||[i.data_admissao])[0],
+          (i.meses||[]).length
+        ]);
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, autoWidth(XLSX.utils.aoa_to_sheet(aba3), aba3), 'Irregulares por Cargo');
+
+    // ABA 4 — Preteridos nominais
+    const contatos = getContatos();
+    const aba4 = [['CARGO', 'COLOCAÇÃO', 'NOME DO PRETERIDO', 'NOTA FINAL', 'STATUS', 'CPF', 'DATA NASC.', 'INSCRIÇÃO', 'DDD', 'CELULAR', 'ANOTAÇÕES', 'MARCO (ÚLTIMO NOMEADO)']];
+    (state.preteridosNominais || []).forEach(p => {
+      p.preteridos.forEach((c, idx) => {
+        const key = `${state.orgao}||${p.cargo}||${p.marcoPosicao + idx + 1}`;
+        const ct = contatos[key] || {};
+        aba4.push([
+          p.cargo,
+          p.marcoPosicao + idx + 1,
+          c.nome,
+          c.notaFinal,
+          c.status,
+          c.cpf || '',
+          c.dataNasc || '',
+          c.inscricao || '',
+          ct.ddd || '',
+          ct.celular || '',
+          ct.anotacoes || '',
+          p.marcoNome || '(nenhum efetivo nomeado)'
+        ]);
+      });
+    });
+    XLSX.utils.book_append_sheet(wb, autoWidth(XLSX.utils.aoa_to_sheet(aba4), aba4), 'Preteridos Nominais');
+
+    // ABA 5 — Análise de Vagas
+    const ultimoMesStr = state.ultimoMesValido ?
+      `${(state.ultimoMesValido % 100).toString().padStart(2,'0')}/${Math.floor(state.ultimoMesValido/100)}` : '';
+    const classLabel = {critico:'PRETERIÇÃO', atencao:'ATENÇÃO', ok:'REGULAR'};
+    const aba5 = [
+      [`BASE: último mês dentro da validade — ${ultimoMesStr}`], [''],
+      ['CARGO', 'VAGAS NA LEI', 'EFETIVOS ATIVOS', 'CARGOS VAGOS', 'IRREGULARES', 'IREG. CONFIRM.', 'EXCEDENTES', 'PRETERIDOS', 'SITUAÇÃO'],
+    ];
+    state.analiseVagas.forEach(a => {
+      aba5.push([a.cargo, a.totalLei, a.nEfetivos, a.cargosVagos, a.nEIP, a.eipIrregulares, a.eipExcedentes, a.preteridos, classLabel[a.status]]);
+    });
+    XLSX.utils.book_append_sheet(wb, autoWidth(XLSX.utils.aoa_to_sheet(aba5), aba5), 'Análise de Vagas');
+
+    // ABA 6 — Resumo Executivo
+    const totalIrr = state.analiseVagas.reduce((s,a) => s + a.eipIrregulares, 0);
+    const totalPret = (state.preteridosNominais||[]).reduce((s,p) => s + p.preteridos.length, 0);
+    const nCriticos = state.analiseVagas.filter(a => a.status === 'critico').length;
+    const aba6 = [
+      ['RESUMO EXECUTIVO — AUDITORIA DE PRETERIÇÃO'], [''],
+      ['Órgão auditado', state.orgao],
+      ['Validade do concurso', `${formatDate(state.dataInicio)} a ${formatDate(state.dataFim)}`],
+      [''], ['INDICADORES', 'QUANTIDADE'],
+      ['Total de cargos no concurso', state.vagasConcurso.length],
+      ['Cargos com preterição confirmada', nCriticos],
+      ['Total de irregulares', totalIrr],
+      ['Total de candidatos preteridos', totalPret],
+      [''], ['CARGOS COM PRETERIÇÃO'],
+      ['Cargo', 'Irregulares', 'Preteridos', 'Marco'],
+      ...(state.preteridosNominais||[]).map(p => [p.cargo, p.nIrregulares, p.nPreteridos, p.marcoNome||'—']),
+    ];
+    XLSX.utils.book_append_sheet(wb, autoWidth(XLSX.utils.aoa_to_sheet(aba6), aba6), 'Resumo Executivo');
+
+    const orgaoSlug = state.orgao.replace(/[^a-zA-Z0-9]/g,'-').toLowerCase().substring(0,30);
+    const dataStr = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `auditoria-pretericao-${orgaoSlug}-${dataStr}.xlsx`);
+    showToast('✅ Relatório exportado com sucesso!', 3500);
+  } catch(e) {
+    showToast('❌ Erro ao exportar: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ===================== BANCO DE RESULTADOS =====================
+const BANCO_KEY    = 'auditaConcurso_banco';
+const CONTATOS_KEY = 'auditaConcurso_contatos';
+const PASTAS_KEY   = 'auditaConcurso_pastas';
+
+// Ao iniciar: carrega dados do placeholder embutido no HTML para localStorage
+function _inicializarDados() {
+  try {
+    const el = document.getElementById('__AC_DADOS__');
+    if (!el) return;
+    const raw = el.textContent.trim();
+    if (!raw || raw === 'null') return;
+    const d = JSON.parse(raw);
+    if (d.banco)    localStorage.setItem(BANCO_KEY,    JSON.stringify(d.banco));
+    if (d.contatos) localStorage.setItem(CONTATOS_KEY, JSON.stringify(d.contatos));
+    if (d.pastas)   localStorage.setItem(PASTAS_KEY,   JSON.stringify(d.pastas));
+    // Marcar como já carregado para evitar sobrescrever dados mais recentes do localStorage
+    el.textContent = 'null';
+  } catch(e) { console.warn('Init dados:', e); }
+}
+
+function getBanco()     { try { return JSON.parse(localStorage.getItem(BANCO_KEY)||'[]');   } catch { return []; } }
+function setBanco(v)    { localStorage.setItem(BANCO_KEY,    JSON.stringify(v)); }
+function getContatos()  { try { return JSON.parse(localStorage.getItem(CONTATOS_KEY)||'{}'); } catch { return {}; } }
+function saveContatos(v){ localStorage.setItem(CONTATOS_KEY, JSON.stringify(v)); }
+function getPastas()    { try { return JSON.parse(localStorage.getItem(PASTAS_KEY)||'[]');  } catch { return []; } }
+function setPastas(v)   { localStorage.setItem(PASTAS_KEY,   JSON.stringify(v)); }
+
+// Gera e baixa novo HTML com dados embutidos — substituindo o arquivo do usuário
+function _gerarHTMLComDados() {
+  try {
+    const dados = JSON.stringify({
+      banco: getBanco(),
+      contatos: getContatos(),
+      pastas: getPastas(),
+    });
+    // Usar source capturado no init (antes de manipulações DOM)
+    let html = window.__AC_SOURCE__;
+    if (!html) { html = document.documentElement.outerHTML; }
+    // Injetar dados no placeholder
+    html = html.replace(
+      /(<script[^>]*id="__AC_DADOS__"[^>]*type="application\/json"[^>]*>)[\s\S]*?(<\/script>)/,
+      (_, open, close) => open + dados + close
+    );
+    // Reset do flag de captura para próxima abertura funcionar
+    html = html.replace(
+      /(<script[^>]*>)\s*\/\/ Captura o HTML fonte[\s\S]*?(<\/script>)/,
+      (_, open, close) => open + '\nwindow.__AC_SOURCE__ = null;\n' + close
+    );
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'AuditaConcurso.html';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 2000);
+    return true;
+  } catch(e) {
+    console.error('Erro ao gerar HTML:', e);
+    return false;
+  }
+}
+
+function salvarApp() { _gerarHTMLComDados(); }
+function exportarDados() { _gerarHTMLComDados(); }
+function importarDados() { showToast('Use o botão "Auditados" para ver suas auditorias.'); }
+
+// Salva e gera HTML automaticamente
+function salvarEExportar() {
+  salvarResultado();
+  setTimeout(() => {
+    if (_gerarHTMLComDados()) {
+      showToast('✅ Auditoria salva! Substitua o arquivo AuditaConcurso.html pelo baixado.');
+    }
+  }, 400);
+}
+
+function salvarResultado() {
+  if (!state.preteridosNominais || !state.orgao) {
+    showToast('❌ Nenhum resultado para salvar.'); return;
+  }
+  const banco = getBanco();
+  const totalPret = state.preteridosNominais.reduce((s,p) => s + p.preteridos.length, 0);
+  const totalIrr  = state.preteridosNominais.reduce((s,p) => s + p.nIrregulares, 0);
+
+  // Criar pasta automaticamente com nome do órgão (se não existir)
+  let pastas = getPastas();
+  let pastaId = pastas.find(p => p.nome === state.orgao && !p.pai)?.id;
+  if (!pastaId) {
+    pastaId = Date.now().toString() + '_pasta';
+    pastas.push({ id: pastaId, nome: state.orgao, pai: null });
+    setPastas(pastas);
+  }
+
+  const idxExist = banco.findIndex(b => b.orgao === state.orgao && b.dataInicio === state.dataInicio?.toISOString());
+  const id = idxExist >= 0 ? banco[idxExist].id : Date.now();
+  const registro = {
+    id,
+    pasta: pastaId,
+    orgao: state.orgao,
+    dataInicio: state.dataInicio?.toISOString(),
+    dataFim: state.dataFim?.toISOString(),
+    salvoEm: new Date().toISOString(),
+    totalCargos: state.preteridosNominais.length,
+    totalIrregulares: totalIrr,
+    totalPreteridos: totalPret,
+    vagasConcurso: state.vagasConcurso || [],
+    vagasLei: state.vagasLei || [],
+    correspondencia: state.correspondencia || {},
+    analiseVagas: state.analiseVagas || [],
+    preteridosNominais: state.preteridosNominais,
+    resultadoConcurso: state.resultadoConcurso || [],
+    indicios: state.indicios || [],
+    arquivos: state.arquivos || {},
+  };
+
+  if (idxExist >= 0) {
+    banco[idxExist] = registro;
+    showToast('✅ Atualizado! Use "💾 Exportar Dados" para backup.');
+  } else {
+    banco.unshift(registro);
+    showToast(`✅ Salvo na pasta "${state.orgao}"! Use "💾 Exportar Dados" para backup.`);
+  }
+  setBanco(banco);
+  renderBanco();
+}
+
+function toggleBanco() {
+  const painel = document.getElementById('bancoPainel');
+  const visivel = painel.style.display === 'flex';
+  if (visivel) {
+    painel.style.display = 'none';
+  } else {
+    painel.style.display = 'flex';
+    _hubPastaAtual = null;
+    renderHub();
+  }
+}
+
+// ===================== HUB COM PASTAS =====================
+let _hubPastaAtual = null; // null = raiz
+
+
+function renderHub() {
+  const banco = getBanco();
+  const pastas = getPastas();
+  const conteudo = document.getElementById('hubConteudo');
+  const vazio = document.getElementById('bancoVazio');
+  const caminho = document.getElementById('hubCaminho');
+
+  // Atualizar caminho
+  if (_hubPastaAtual) {
+    const pasta = pastas.find(p => p.id === _hubPastaAtual);
+    caminho.innerHTML = `<span onclick="_hubPastaAtual=null;renderHub()" style="cursor:pointer;color:#7ec87e;">📂 Raiz</span> › 📁 ${pasta ? pasta.nome : '?'}`;
+  } else {
+    caminho.textContent = '📂 Raiz';
+  }
+
+  // Pastas neste nível
+  const pastasFiltradas = pastas.filter(p => (p.pai || null) === _hubPastaAtual);
+  // Auditorias neste nível
+  const auditoriasFiltradas = banco.filter(b => (b.pasta || null) === _hubPastaAtual);
+
+  const total = pastasFiltradas.length + auditoriasFiltradas.length;
+  if (!total) { vazio.style.display = 'block'; conteudo.innerHTML = ''; return; }
+  vazio.style.display = 'none';
+
+  let html = '';
+
+  // Renderizar pastas
+  pastasFiltradas.forEach(p => {
+    const nAud = banco.filter(b => b.pasta === p.id).length;
+    html += `
+    <div style="background:#2a2a2a;border:1px solid #3a3a3a;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;">
+      <div onclick="_hubPastaAtual='${p.id}';renderHub()" style="flex:1;cursor:pointer;">
+        <div style="font-size:1.2rem;display:inline;margin-right:8px;">📁</div>
+        <span style="font-weight:700;font-size:0.88rem;color:#e0e0e0;">${p.nome}</span>
+        <div style="font-size:0.68rem;color:#666;margin-top:3px;">${nAud} auditoria${nAud!==1?'s':''}</div>
+      </div>
+      <button onclick="excluirPasta('${p.id}')" style="background:#2a1a1a;border:none;color:#dc2626;border-radius:6px;padding:6px 10px;font-size:0.72rem;cursor:pointer;">🗑️</button>
+    </div>`;
+  });
+
+  // Renderizar auditorias
+  auditoriasFiltradas.forEach(b => {
+    const dataInicio = b.dataInicio ? new Date(b.dataInicio) : null;
+    const dataFim    = b.dataFim    ? new Date(b.dataFim)    : null;
+    const salvoEm    = new Date(b.salvoEm);
+    const periodo    = dataInicio ? `${formatDate(dataInicio)} a ${formatDate(dataFim)}` : '';
+    const temPret    = b.totalPreteridos > 0;
+
+    // Pastas disponíveis para mover (exceto a atual)
+    const pastasDisp = pastas.filter(p => p.id !== _hubPastaAtual);
+    const moverOpts  = pastasDisp.length
+      ? pastasDisp.map(p => `<option value="${p.id}">${p.nome}</option>`).join('')
+      : '';
+
+    html += `
+    <div style="background:white;border-radius:10px;padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1;" onclick="carregarResultado(${b.id})" style="cursor:pointer;">
+          <div style="font-weight:800;font-size:0.88rem;color:#1a3a1a;cursor:pointer;">${b.orgao}</div>
+          <div style="font-size:0.68rem;color:#666;margin-top:2px;">${periodo}</div>
+          <div style="margin-top:5px;">
+            <span style="font-size:0.75rem;font-weight:700;color:${temPret?'#dc2626':'#16a34a'};">
+              ${temPret ? `🚨 ${b.totalPreteridos} preterido${b.totalPreteridos!==1?'s':''}` : '✅ Sem preterição'}
+            </span>
+          </div>
+          <div style="font-size:0.62rem;color:#aaa;margin-top:2px;">Salvo em ${salvoEm.toLocaleDateString('pt-BR')} ${salvoEm.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+          <button onclick="carregarResultado(${b.id})" style="background:#1a3a1a;border:none;color:white;border-radius:6px;padding:7px 12px;font-size:0.72rem;font-weight:800;cursor:pointer;">Ver</button>
+          ${moverOpts ? `<select onchange="moverAuditoria(${b.id},this.value)" style="font-size:0.65rem;border-radius:6px;border:1px solid #ddd;padding:4px;background:white;color:#333;"><option value="">📁 Mover</option>${moverOpts}</select>` : ''}
+          <button onclick="excluirResultado(${b.id})" style="background:#fee2e2;border:none;color:#dc2626;border-radius:6px;padding:7px 12px;font-size:0.72rem;cursor:pointer;">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  conteudo.innerHTML = html;
+}
+
+function criarPasta() {
+  const nome = prompt('Nome da pasta:');
+  if (!nome || !nome.trim()) return;
+  const pastas = getPastas();
+  pastas.push({ id: Date.now().toString(), nome: nome.trim(), pai: _hubPastaAtual });
+  setPastas(pastas);
+  renderHub();
+}
+
+function excluirPasta(id) {
+  if (!confirm('Excluir esta pasta? As auditorias dentro serão movidas para a raiz.')) return;
+  // Mover auditorias para raiz
+  const banco = getBanco();
+  banco.forEach(b => { if (b.pasta === id) b.pasta = null; });
+  setBanco(banco);
+  // Remover pasta
+  const pastas = getPastas().filter(p => p.id !== id && p.pai !== id);
+  setPastas(pastas);
+  renderHub();
+}
+
+function moverAuditoria(id, pastaId) {
+  const banco = getBanco();
+  const idx = banco.findIndex(b => b.id === id);
+  if (idx >= 0) { banco[idx].pasta = pastaId || null; setBanco(banco); renderHub(); }
+}
+
+function renderBanco() { renderHub(); } // compatibilidade
+
+function excluirResultado(id) {
+  const banco = getBanco().filter(b => b.id !== id);
+  setBanco(banco);
+  renderHub();
+  showToast('🗑️ Resultado excluído.');
+}
+
+function carregarResultado(id) {
+  const banco = getBanco();
+  const reg = banco.find(b => b.id === id);
+  if (!reg) { showToast('❌ Resultado não encontrado.'); return; }
+
+  // ── 1. Restaurar estado completo ──
+  state.orgao              = reg.orgao;
+  state.dataInicio         = new Date(reg.dataInicio);
+  state.dataFim            = new Date(reg.dataFim);
+  state.vagasConcurso      = reg.vagasConcurso || [];
+  state.vagasLei           = reg.vagasLei || [];
+  state.correspondencia    = reg.correspondencia || {};
+  state.correspondenciaSem = reg.correspondenciaSem || {};
+  state.analiseVagas       = reg.analiseVagas || [];
+  state.preteridosNominais = reg.preteridosNominais || [];
+  state.resultadoConcurso  = reg.resultadoConcurso || [];
+  state.arquivos           = reg.arquivos || { vagasConcurso: null, vagasLei: null, folhas: [], resultado: null };
+  state.indicios           = reg.indicios || [];
+
+  // ── 2. Restaurar folhas dos conteúdos brutos ──
+  state.folhas = [];
+  state.anosCarregados = {};
+  state.anosNecessarios = [];
+  if (state.arquivos.folhas && state.arquivos.folhas.length) {
+    state.arquivos.folhas.forEach(f => {
+      try {
+        const rows = parseCSV(f.conteudo);
+        state.folhas.push(...rows);
+        state.anosCarregados[f.ano] = true;
+        if (!state.anosNecessarios.includes(f.ano)) state.anosNecessarios.push(f.ano);
+      } catch(e) { console.warn('Erro ao restaurar folha:', e); }
+    });
+    state.cargosEIPFolha = [...new Set(
+      state.folhas.filter(r => r.tipo_cargo !== 'Efetivos').map(r => (r.descricao_cargo||'').trim())
+    )].filter(Boolean).sort();
+  }
+
+  // ── 3. Re-renderizar Etapa 1 (Concurso) ──
+  const elOrgao = document.getElementById('orgaoInput');
+  if (elOrgao) elOrgao.value = state.orgao;
+  const elInicio = document.getElementById('dataInicioInput');
+  if (elInicio) elInicio.value = state.dataInicio.toISOString().slice(0,10);
+  // Verificar se concurso ainda válido (dataFim = hoje)
+  const hoje_ = new Date(); hoje_.setHours(0,0,0,0);
+  const dataFimD = new Date(state.dataFim); dataFimD.setHours(0,0,0,0);
+  const aindaValido = dataFimD.getTime() === hoje_.getTime();
+  const chk = document.getElementById('concursoValido');
+  if (chk) { chk.checked = aindaValido; toggleConcursoValido(); }
+  const elFim = document.getElementById('dataFimInput');
+  if (elFim && !aindaValido) elFim.value = state.dataFim.toISOString().slice(0,10);
+
+  // ── 4. Re-renderizar Etapa 2 (Arquivos) ──
+  const arq = state.arquivos;
+  const z1 = document.getElementById('zone1');
+  if (z1 && arq.vagasConcurso) {
+    z1.classList.add('loaded');
+    z1.querySelector('.upload-icon').textContent = '✅';
+    z1.querySelector('.upload-label').textContent = arq.vagasConcurso.nome;
+    z1.querySelector('.upload-hint').textContent = `${state.vagasConcurso.length} cargos`;
+  }
+  const z2 = document.getElementById('zone2');
+  if (z2 && arq.vagasLei) {
+    z2.classList.add('loaded');
+    z2.querySelector('.upload-icon').textContent = '✅';
+    z2.querySelector('.upload-label').textContent = arq.vagasLei.nome;
+    z2.querySelector('.upload-hint').textContent = `${state.vagasLei.length} cargos`;
+  }
+  if (state.vagasConcurso.length && state.vagasLei.length) renderPreviewConcurso();
+
+  // ── 5. Re-renderizar Etapa 3 (Folhas) ──
+  if (state.anosNecessarios.length) {
+    renderEtapa3Folhas();
+    // Marcar zonas de folhas como carregadas
+    state.arquivos.folhas.forEach(f => {
+      const zone = document.getElementById('zoneFolha' + f.ano);
+      if (zone) {
+        zone.classList.add('loaded');
+        zone.querySelector('.upload-icon').textContent = '✅';
+        zone.querySelector('.upload-label').textContent = f.nome;
+        zone.querySelector('.upload-hint').textContent = `${state.folhas.filter(r => Math.floor(parseInt(r.ano_mes)/100) === f.ano).length} registros`;
+      }
+      const chip = document.getElementById('anoChip' + f.ano);
+      if (chip) { chip.classList.remove('needed'); chip.classList.add('loaded'); chip.textContent = '✅ ' + f.ano; }
+    });
+    document.getElementById('btnEtapa3Folhas').disabled = false;
+  }
+
+  // ── 6. Re-renderizar Etapa 4 (Correspondência) ──
+  state.cargoAtualIndex = 0;
+  renderEtapa4Correspondencia();
+
+  // ── 7. Re-renderizar Etapa 5 (Indícios) ──
+  processarIndicios();
+  renderEtapa5Indicios();
+
+  // ── 8. Re-renderizar Etapa 6 (Vagas) ──
+  const anoMesFim = state.dataFim.getFullYear() * 100 + (state.dataFim.getMonth() + 1);
+  let ultimoMes = 0;
+  state.folhas.forEach(r => { const am = parseInt(r.ano_mes); if (am <= anoMesFim && am > ultimoMes) ultimoMes = am; });
+  state.ultimoMesValido = ultimoMes;
+  const anoUltimo = Math.floor(ultimoMes / 100);
+  const mesUltimo = ultimoMes % 100;
+  const elUltimoMes = document.getElementById('infoUltimoMes');
+  if (elUltimoMes) elUltimoMes.textContent = `Base de cálculo: ${String(mesUltimo).padStart(2,'0')}/${anoUltimo} (último mês dentro da validade do concurso).`;
+  renderEtapa6Vagas();
+
+  // ── 9. Re-renderizar Etapa 7 (Resultado) ──
+  const zr = document.getElementById('zoneResultado');
+  if (zr && arq.resultado) {
+    zr.classList.add('loaded');
+    zr.querySelector('.upload-icon').textContent = '✅';
+    zr.querySelector('.upload-label').textContent = arq.resultado.nome;
+    zr.querySelector('.upload-hint').textContent = `${state.resultadoConcurso.length} candidatos`;
+  }
+  if (state.resultadoConcurso.length) {
+    const cargosUnicos = new Set(state.resultadoConcurso.map(r => r.codigoCargo)).size;
+    const aprovados = state.resultadoConcurso.filter(r => r.status && r.status.toUpperCase().includes('APROVAD')).length;
+    document.getElementById('summaryResultado').innerHTML = `
+      <div class="summary-box"><div class="summary-num">${cargosUnicos}</div><div class="summary-lbl">Cargos</div></div>
+      <div class="summary-box"><div class="summary-num">${state.resultadoConcurso.length}</div><div class="summary-lbl">Candidatos</div></div>
+      <div class="summary-box"><div class="summary-num">${aprovados}</div><div class="summary-lbl">Aprovados</div></div>`;
+    document.getElementById('btnIdentificarPreteridos').disabled = false;
+  }
+
+  // ── 10. Liberar todos os steps e ir ao 8 ──
+  state.stepLiberado = 8;
+  for (let i = 1; i <= 8; i++) liberarStep(i);
+  document.getElementById('bancoPainel').style.display = 'none';
+  goStep(8);
+  renderEtapa8();
+  showToast(`📂 ${reg.orgao} carregado!`);
+}
+
+function excluirResultado(id) {
+  const banco = getBanco().filter(b => b.id !== id);
+  setBanco(banco);
+  renderBanco();
+  showToast('🗑️ Resultado excluído.');
+}
+
+function novoAuditoria() {
+  document.getElementById('bancoPainel').style.display = 'none';
+  // Reset state
+  Object.keys(state).forEach(k => {
+    if (Array.isArray(state[k])) state[k] = [];
+    else if (typeof state[k] === 'object' && state[k] !== null && !(state[k] instanceof Date)) state[k] = {};
+    else state[k] = null;
+  });
+  // Reset steps
+  document.querySelectorAll('.step-item').forEach((s,i) => {
+    s.className = 'step-item' + (i === 0 ? ' active' : ' locked');
+  });
+  goStep(1);
+  showToast('🆕 Nova auditoria iniciada!');
+}
+
+let _modalKey = null;
+
+function abrirModalPreterido(mapKey) {
+  const pret = _preteridosMap.get(mapKey);
+  if (!pret) return;
+  _modalKey = `${state.orgao}||${mapKey}`;
+
+  document.getElementById('modalNome').textContent = pret.nome || '—';
+  document.getElementById('modalCargo').textContent = pret.cargo || '—';
+  document.getElementById('modalColocacao').textContent = `${pret.colocacao}º colocado`;
+  document.getElementById('modalNota').textContent = pret.notaFinal ?? '—';
+  document.getElementById('modalStatus').textContent = pret.status || '—';
+  const cpfVal = pret.cpf && !pret.cpf.startsWith('000') && pret.cpf !== '' ? pret.cpf : '(não disponível)';
+  document.getElementById('modalCpf').textContent = cpfVal;
+  const nascVal = pret.dataNasc && !pret.dataNasc.includes('1000') && pret.dataNasc !== '' ? pret.dataNasc : '(não disponível)';
+  document.getElementById('modalNasc').textContent = nascVal;
+  document.getElementById('modalInscricao').textContent = pret.inscricao || '—';
+
+  // Carregar contato salvo
+  const contatos = getContatos();
+  const salvo = contatos[_modalKey] || {};
+  document.getElementById('modalDdd').value = salvo.ddd || '';
+  document.getElementById('modalCelular').value = salvo.celular || '';
+  document.getElementById('modalAnotacoes').value = salvo.anotacoes || '';
+
+  document.getElementById('modalPreterido').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function copiarCpf() {
+  const cpf = document.getElementById('modalCpf').textContent;
+  if (!cpf || cpf === '—') { showToast('⚠️ CPF não disponível'); return; }
+  navigator.clipboard.writeText(cpf).then(() => showToast('📋 CPF copiado!')).catch(() => {
+    const el = document.createElement('textarea');
+    el.value = cpf; document.body.appendChild(el);
+    el.select(); document.execCommand('copy'); document.body.removeChild(el);
+    showToast('📋 CPF copiado!');
+  });
+}
+
+function fecharModal() {
+  document.getElementById('modalPreterido').style.display = 'none';
+  document.body.style.overflow = '';
+  _modalKey = null;
+}
+
+function salvarContato() {
+  if (!_modalKey) return;
+  const ddd = document.getElementById('modalDdd').value.trim();
+  const celular = document.getElementById('modalCelular').value.trim();
+  const anotacoes = document.getElementById('modalAnotacoes').value.trim();
+
+  if (celular && celular.length !== 9) {
+    showToast('⚠️ Celular deve ter exatamente 9 dígitos'); return;
+  }
+  if (ddd && ddd.length !== 2) {
+    showToast('⚠️ DDD deve ter 2 dígitos'); return;
+  }
+
+  const contatos = getContatos();
+  contatos[_modalKey] = { ddd, celular, anotacoes, nome: document.getElementById('modalNome').textContent };
+  saveContatos(contatos);
+  showToast('✅ Contato salvo!');
+}
+
+function abrirWhatsApp() {
+  const ddd = document.getElementById('modalDdd').value.trim();
+  const cel = document.getElementById('modalCelular').value.trim();
+  if (!ddd || !cel) { showToast('⚠️ Informe DDD e celular'); return; }
+  if (ddd.length !== 2 || cel.length !== 9) { showToast('⚠️ DDD (2 dígitos) e celular (9 dígitos)'); return; }
+  const nome = document.getElementById('modalNome').textContent;
+  const cargo = document.getElementById('modalCargo').textContent;
+  const msg = encodeURIComponent(`Olá, ${nome.split(' ')[0]}! Estamos entrando em contato a respeito do concurso público para o cargo de ${cargo} de ${state.orgao}.`);
+  window.open(`https://wa.me/55${ddd}${cel}?text=${msg}`, '_blank');
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modalPreterido').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+// ===================== INIT =====================
+// Registrar Service Worker (PWA - funciona offline)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+// Capturar HTML fonte antes de qualquer manipulação
+window.__AC_SOURCE__ = document.documentElement.outerHTML;
+// Carregar dados embutidos no HTML para localStorage
+_inicializarDados();
+toggleConcursoValido();
+goStep(1);
+</script>
+</body>
+</html>
