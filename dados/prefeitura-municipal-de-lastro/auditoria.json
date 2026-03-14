@@ -4,7 +4,7 @@
   "orgao": "Prefeitura Municipal de Lastro",
   "dataInicio": "2024-02-27T00:00:00.000Z",
   "dataFim": "2026-03-14T03:00:00.000Z",
-  "salvoEm": "2026-03-14T04:46:03.664Z",
+  "salvoEm": "2026-03-14T04:46:06.993Z",
   "totalCargos": 0,
   "totalIrregulares": 0,
   "totalPreteridos": 0,
@@ -358,6 +358,392 @@
   "analiseVagas": [],
   "preteridosNominais": [],
   "resultadoConcurso": [],
-  "indicios": [],
+  "indicios": [
+    {
+      "nome": "NATALIA ROQUE GADELHA",
+      "cpf": "***.480.894-**",
+      "cargoNomeFolha": "PROFESSOR DE EDUCAÇÃO BASICA I- B  PRO-T",
+      "cargoConcurso": "Professor de Educação Básica I",
+      "codigoCargo": "17",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/03/2024"
+      ],
+      "meses": [
+        "202403",
+        "202404",
+        "202405"
+      ]
+    },
+    {
+      "nome": "MARIA GEISA SARMENTO FERREIRA",
+      "cpf": "***.936.924-**",
+      "cargoNomeFolha": "PSICOPEDAGOGA CAPS",
+      "cargoConcurso": "Psicopedagogo",
+      "codigoCargo": "15",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/03/2024",
+        "02/01/2025",
+        "02/01/2026"
+      ],
+      "meses": [
+        "202403",
+        "202404",
+        "202405",
+        "202406",
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412",
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "AYRTON GONÇALVES QUEIROGA",
+      "cpf": "***.893.634-**",
+      "cargoNomeFolha": "PSICOLOGO",
+      "cargoConcurso": "Psicólogo",
+      "codigoCargo": "11",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/04/2024",
+        "01/07/2024",
+        "02/01/2025",
+        "02/01/2026"
+      ],
+      "meses": [
+        "202404",
+        "202405",
+        "202406",
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412",
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "JESSIKA GOMES DE ABRANTES",
+      "cpf": "***.457.374-**",
+      "cargoNomeFolha": "PSICOLOGO",
+      "cargoConcurso": "Psicólogo",
+      "codigoCargo": "11",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/04/2024"
+      ],
+      "meses": [
+        "202404",
+        "202405",
+        "202406",
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412"
+      ]
+    },
+    {
+      "nome": "LAYZE MARIA PORDEUS DE ARAUJO",
+      "cpf": "***.022.174-**",
+      "cargoNomeFolha": "ASSISTENTE SOCIAL",
+      "cargoConcurso": "Assistente Social",
+      "codigoCargo": "07",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/04/2024",
+        "02/01/2025",
+        "02/01/2026"
+      ],
+      "meses": [
+        "202404",
+        "202405",
+        "202406",
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412",
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "MARIA MELISE PEREIRA DE SOUSA",
+      "cpf": "***.007.328-**",
+      "cargoNomeFolha": "ASSISTENTE SOCIAL",
+      "cargoConcurso": "Assistente Social",
+      "codigoCargo": "07",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/04/2024",
+        "02/01/2025"
+      ],
+      "meses": [
+        "202404",
+        "202405",
+        "202406",
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412",
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511"
+      ]
+    },
+    {
+      "nome": "MARIA DA CONCEICAO SARMENTO RODRIGUES",
+      "cpf": "***.807.254-**",
+      "cargoNomeFolha": "ENFERMEIRA",
+      "cargoConcurso": "Enfermeiro ESF",
+      "codigoCargo": "09",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/07/2024",
+        "02/01/2025"
+      ],
+      "meses": [
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412",
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "RAENIA THAIS VIRGINIO DE SOUSA",
+      "cpf": "***.897.004-**",
+      "cargoNomeFolha": "ASSISTENTE SOCIAL",
+      "cargoConcurso": "Assistente Social",
+      "codigoCargo": "07",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/07/2024",
+        "01/01/2025",
+        "02/01/2026"
+      ],
+      "meses": [
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412",
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "CELIA MARIA ALEXANDRE DE SOUSA",
+      "cpf": "***.465.134-**",
+      "cargoNomeFolha": "AGENTE COMUNITARIO DE SAUDE",
+      "cargoConcurso": "Agente Comunitário de Saúde",
+      "codigoCargo": "03",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/07/2024",
+        "02/01/2025"
+      ],
+      "meses": [
+        "202407",
+        "202408",
+        "202409",
+        "202410",
+        "202411",
+        "202412",
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505"
+      ]
+    },
+    {
+      "nome": "ELIENE CARLOS DANTAS DA SILVA",
+      "cpf": "***.701.704-**",
+      "cargoNomeFolha": "TECNICO EM ENFERMAGEM",
+      "cargoConcurso": "Técnico em Enfermagem (Plantonista)",
+      "codigoCargo": "04",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "02/01/2025",
+        "02/01/2026"
+      ],
+      "meses": [
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "MARIA JOSE DE PAZ SOUSA",
+      "cpf": "***.985.144-**",
+      "cargoNomeFolha": "TECNICO EM ENFERMAGEM",
+      "cargoConcurso": "Técnico em Enfermagem (Plantonista)",
+      "codigoCargo": "04",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "02/01/2025",
+        "02/01/2026"
+      ],
+      "meses": [
+        "202501",
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "LUANA KELLY SARMENTO SILVA",
+      "cpf": "***.336.654-**",
+      "cargoNomeFolha": "ASSISTENTE SOCIAL",
+      "cargoConcurso": "Assistente Social",
+      "codigoCargo": "07",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "03/02/2025"
+      ],
+      "meses": [
+        "202502",
+        "202503",
+        "202504",
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511"
+      ]
+    },
+    {
+      "nome": "YORRANA FERNANDES FIGUEIREDO",
+      "cpf": "***.745.384-**",
+      "cargoNomeFolha": "PSICOLOGO",
+      "cargoConcurso": "Psicólogo",
+      "codigoCargo": "11",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "12/05/2025",
+        "02/01/2026"
+      ],
+      "meses": [
+        "202505",
+        "202506",
+        "202507",
+        "202508",
+        "202509",
+        "202510",
+        "202511",
+        "202601"
+      ]
+    },
+    {
+      "nome": "MARIA JOSE DE ABRANTES",
+      "cpf": "***.418.124-**",
+      "cargoNomeFolha": "PROFESSOR DE EDUCAÇÃO BASICA I - A        PRO- T",
+      "cargoConcurso": "Professor de Educação Básica I",
+      "codigoCargo": "17",
+      "unidade": "Prefeitura Municipal de Lastro",
+      "admissoes": [
+        "01/09/2025"
+      ],
+      "meses": [
+        "202509",
+        "202510",
+        "202511"
+      ]
+    }
+  ],
   "contatos": {}
 }
