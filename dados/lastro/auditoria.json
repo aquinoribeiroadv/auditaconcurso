@@ -4,7 +4,7 @@
   "orgao": "Lastro",
   "dataInicio": "2026-03-03T00:00:00.000Z",
   "dataFim": "2026-03-14T03:00:00.000Z",
-  "salvoEm": "2026-03-14T19:33:36.641Z",
+  "salvoEm": "2026-03-14T19:33:48.804Z",
   "totalCargos": 0,
   "totalIrregulares": 0,
   "totalPreteridos": 0,
@@ -181,7 +181,141 @@
       "totalVagas": 2
     }
   ],
-  "vagasLei": [],
+  "vagasLei": [
+    {
+      "codigo": "03",
+      "cargo": "Agente Comunitário de Saúde",
+      "ocupadosAntes": 6,
+      "disponiveis": 10,
+      "totalVagas": 16
+    },
+    {
+      "codigo": "07",
+      "cargo": "Assistente Social",
+      "ocupadosAntes": 1,
+      "disponiveis": 6,
+      "totalVagas": 7
+    },
+    {
+      "codigo": "13",
+      "cargo": "Contador",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "14",
+      "cargo": "Educador Físico - NASF",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "09",
+      "cargo": "Enfermeiro ESF",
+      "ocupadosAntes": 0,
+      "disponiveis": 4,
+      "totalVagas": 4
+    },
+    {
+      "codigo": "08",
+      "cargo": "Enfermeiro Plantonista",
+      "ocupadosAntes": 0,
+      "disponiveis": 12,
+      "totalVagas": 12
+    },
+    {
+      "codigo": "16",
+      "cargo": "Fiscal de Tributos",
+      "ocupadosAntes": 0,
+      "disponiveis": 6,
+      "totalVagas": 6
+    },
+    {
+      "codigo": "01",
+      "cargo": "Motorista (Categoria D)",
+      "ocupadosAntes": 0,
+      "disponiveis": 12,
+      "totalVagas": 12
+    },
+    {
+      "codigo": "10",
+      "cargo": "Médico Veterinário",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "06",
+      "cargo": "Orientador Social",
+      "ocupadosAntes": 0,
+      "disponiveis": 5,
+      "totalVagas": 5
+    },
+    {
+      "codigo": "12",
+      "cargo": "Procurador Jurídico",
+      "ocupadosAntes": 0,
+      "disponiveis": 4,
+      "totalVagas": 4
+    },
+    {
+      "codigo": "17",
+      "cargo": "Professor de Educação Básica I",
+      "ocupadosAntes": 23,
+      "disponiveis": 18,
+      "totalVagas": 41
+    },
+    {
+      "codigo": "18",
+      "cargo": "Professor de Educação Básica II",
+      "ocupadosAntes": 5,
+      "disponiveis": 12,
+      "totalVagas": 17
+    },
+    {
+      "codigo": "15",
+      "cargo": "Psicopedagogo",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "11",
+      "cargo": "Psicólogo",
+      "ocupadosAntes": 0,
+      "disponiveis": 2,
+      "totalVagas": 2
+    },
+    {
+      "codigo": "19",
+      "cargo": "Supervisor Escolar",
+      "ocupadosAntes": 1,
+      "disponiveis": 8,
+      "totalVagas": 9
+    },
+    {
+      "codigo": "04",
+      "cargo": "Técnico em Enfermagem (Plantonista)",
+      "ocupadosAntes": 0,
+      "disponiveis": 12,
+      "totalVagas": 12
+    },
+    {
+      "codigo": "05",
+      "cargo": "Técnico em Saúde Bucal",
+      "ocupadosAntes": 0,
+      "disponiveis": 3,
+      "totalVagas": 3
+    },
+    {
+      "codigo": "02",
+      "cargo": "Vigia",
+      "ocupadosAntes": 11,
+      "disponiveis": 9,
+      "totalVagas": 20
+    }
+  ],
   "correspondencia": {},
   "analiseVagas": [],
   "preteridosNominais": [],
@@ -194,7 +328,11 @@
       "conteudo": "CÓDIGO\tCARGO\tVAGAS OFERECIDAS\tVAGAS PARA DEFICIENTES\tVAGAS PARA COTAS\tCADASTRO DE RESERVA\tTOTAL DE VAGAS\t \r\n03\tAgente Comunitário de Saúde\t1\t0\t0\t0\t1\t\t \r\n07\tAssistente Social\t1\t0\t0\t0\t1\t\t \r\n13\tContador\t1\t0\t0\t0\t1\t\t \r\n14\tEducador Físico - NASF\t1\t0\t0\t0\t1\t\t \r\n09\tEnfermeiro ESF\t1\t0\t0\t0\t1\t\t \r\n08\tEnfermeiro Plantonista\t2\t0\t0\t0\t2\t\t \r\n16\tFiscal de Tributos\t1\t0\t0\t0\t1\t\t \r\n01\tMotorista (Categoria D)\t3\t0\t0\t0\t3\t\t \r\n10\tMédico Veterinário\t1\t0\t0\t0\t1\t\t \r\n06\tOrientador Social\t1\t0\t0\t0\t1\t\t \r\n12\tProcurador Jurídico\t1\t0\t0\t0\t1\t\t \r\n17\tProfessor de Educação Básica I\t2\t0\t0\t0\t2\t\t \r\n18\tProfessor de Educação Básica II\t7\t0\t0\t0\t7\t\t \r\n15\tPsicopedagogo\t1\t0\t0\t0\t1\t\t \r\n11\tPsicólogo\t1\t0\t0\t0\t1\t\t \r\n19\tSupervisor Escolar\t1\t0\t0\t0\t1\t\t \r\n04\tTécnico em Enfermagem (Plantonista)\t1\t0\t0\t0\t1\t\t \r\n05\tTécnico em Saúde Bucal\t1\t0\t0\t0\t1\t\t \r\n02\tVigia\t2\t0\t0\t0\t2\t\t \r\n",
       "_ghSalvo": true
     },
-    "vagasLei": null,
+    "vagasLei": {
+      "nome": "vagasCargoCriadasPorLei (6).xls",
+      "conteudo": "CÓDIGO\tCARGO\tVAGAS OCUPADAS ANTES DO CONCURSO\tVAGAS DISPONÍVEIS\tTOTAL DE VAGAS\t \r\n03\tAgente Comunitário de Saúde\t6\t10\t16\t\t \r\n07\tAssistente Social\t1\t6\t7\t\t \r\n13\tContador\t0\t3\t3\t\t \r\n14\tEducador Físico - NASF\t0\t3\t3\t\t \r\n09\tEnfermeiro ESF\t0\t4\t4\t\t \r\n08\tEnfermeiro Plantonista\t0\t12\t12\t\t \r\n16\tFiscal de Tributos\t0\t6\t6\t\t \r\n01\tMotorista (Categoria D)\t0\t12\t12\t\t \r\n10\tMédico Veterinário\t0\t3\t3\t\t \r\n06\tOrientador Social\t0\t5\t5\t\t \r\n12\tProcurador Jurídico\t0\t4\t4\t\t \r\n17\tProfessor de Educação Básica I\t23\t18\t41\t\t \r\n18\tProfessor de Educação Básica II\t5\t12\t17\t\t \r\n15\tPsicopedagogo\t0\t3\t3\t\t \r\n11\tPsicólogo\t0\t2\t2\t\t \r\n19\tSupervisor Escolar\t1\t8\t9\t\t \r\n04\tTécnico em Enfermagem (Plantonista)\t0\t12\t12\t\t \r\n05\tTécnico em Saúde Bucal\t0\t3\t3\t\t \r\n02\tVigia\t11\t9\t20\t\t \r\n",
+      "_ghSalvo": true
+    },
     "folhas": [],
     "resultado": null
   }
