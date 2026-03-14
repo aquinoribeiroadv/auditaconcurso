@@ -4,7 +4,7 @@
   "orgao": "Prefeitura Municipal de Lastro",
   "dataInicio": "2024-02-27T00:00:00.000Z",
   "dataFim": "2026-03-14T03:00:00.000Z",
-  "salvoEm": "2026-03-14T04:46:06.993Z",
+  "salvoEm": "2026-03-14T04:46:09.409Z",
   "totalCargos": 0,
   "totalIrregulares": 0,
   "totalPreteridos": 0,
@@ -355,7 +355,657 @@
     "05": [],
     "02": []
   },
-  "analiseVagas": [],
+  "analiseVagas": [
+    {
+      "codigo": "03",
+      "cargo": "Agente Comunitário de Saúde",
+      "vagasEdital": 1,
+      "totalLei": 16,
+      "ocupadosAntes": 6,
+      "nEfetivos": 8,
+      "cargosVagos": 8,
+      "vagasDisponiveis": 8,
+      "nEIP": 1,
+      "eipIrregulares": 1,
+      "eipExcedentes": 0,
+      "preteridos": 1,
+      "marcoNome": "MARTA ABRANTES FERNANDES DE OLIVEIRA",
+      "marcoData": "2025-03-01T03:00:00.000Z",
+      "status": "critico",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.465.134-**",
+          "nome_servidor": "CELIA MARIA ALEXANDRE DE SOUSA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000603 - AGENTE COMUNITARIO DE SAUDE",
+          "valor_vantagem": "2.824",
+          "data_admissao": "01/07/2024",
+          "matricula": "000000020001845",
+          "ano_mes": "202409",
+          "meses": [
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412",
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505"
+          ],
+          "admissoes": [
+            "01/07/2024",
+            "02/01/2025"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "07",
+      "cargo": "Assistente Social",
+      "vagasEdital": 1,
+      "totalLei": 7,
+      "ocupadosAntes": 1,
+      "nEfetivos": 2,
+      "cargosVagos": 5,
+      "vagasDisponiveis": 5,
+      "nEIP": 4,
+      "eipIrregulares": 4,
+      "eipExcedentes": 0,
+      "preteridos": 4,
+      "marcoNome": "FERNANDA SOARES CESAR",
+      "marcoData": "2024-04-01T03:00:00.000Z",
+      "status": "critico",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.022.174-**",
+          "nome_servidor": "LAYZE MARIA PORDEUS DE ARAUJO",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000021 - ASSISTENTE SOCIAL",
+          "valor_vantagem": "1.500",
+          "data_admissao": "01/04/2024",
+          "matricula": "000000020001815",
+          "ano_mes": "202405",
+          "meses": [
+            "202404",
+            "202405",
+            "202406",
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412",
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "01/04/2024",
+            "02/01/2025",
+            "02/01/2026"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.007.328-**",
+          "nome_servidor": "MARIA MELISE PEREIRA DE SOUSA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000021 - ASSISTENTE SOCIAL",
+          "valor_vantagem": "1.500",
+          "data_admissao": "01/04/2024",
+          "matricula": "000000020001814",
+          "ano_mes": "202407",
+          "meses": [
+            "202404",
+            "202405",
+            "202406",
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412",
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511"
+          ],
+          "admissoes": [
+            "01/04/2024",
+            "02/01/2025"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.897.004-**",
+          "nome_servidor": "RAENIA THAIS VIRGINIO DE SOUSA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000021 - ASSISTENTE SOCIAL",
+          "valor_vantagem": "1.500",
+          "data_admissao": "01/07/2024",
+          "matricula": "000000020001852",
+          "ano_mes": "202407",
+          "meses": [
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412",
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "01/07/2024",
+            "01/01/2025",
+            "02/01/2026"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.336.654-**",
+          "nome_servidor": "LUANA KELLY SARMENTO SILVA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000021 - ASSISTENTE SOCIAL",
+          "valor_vantagem": "1.518",
+          "data_admissao": "03/02/2025",
+          "matricula": "000000020001979",
+          "ano_mes": "202511",
+          "meses": [
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511"
+          ],
+          "admissoes": [
+            "03/02/2025"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "09",
+      "cargo": "Enfermeiro ESF",
+      "vagasEdital": 1,
+      "totalLei": 4,
+      "ocupadosAntes": 0,
+      "nEfetivos": 0,
+      "cargosVagos": 4,
+      "vagasDisponiveis": 4,
+      "nEIP": 1,
+      "eipIrregulares": 1,
+      "eipExcedentes": 0,
+      "preteridos": 1,
+      "marcoNome": null,
+      "marcoData": null,
+      "status": "critico",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.807.254-**",
+          "nome_servidor": "MARIA DA CONCEICAO SARMENTO RODRIGUES",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000146 - ENFERMEIRA",
+          "valor_vantagem": "4.318,18",
+          "data_admissao": "01/07/2024",
+          "matricula": "000000020001844",
+          "ano_mes": "202409",
+          "meses": [
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412",
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "01/07/2024",
+            "02/01/2025"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "17",
+      "cargo": "Professor de Educação Básica I",
+      "vagasEdital": 2,
+      "totalLei": 41,
+      "ocupadosAntes": 23,
+      "nEfetivos": 0,
+      "cargosVagos": 41,
+      "vagasDisponiveis": 41,
+      "nEIP": 2,
+      "eipIrregulares": 2,
+      "eipExcedentes": 0,
+      "preteridos": 2,
+      "marcoNome": null,
+      "marcoData": null,
+      "status": "critico",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.480.894-**",
+          "nome_servidor": "NATALIA ROQUE GADELHA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000604 - PROFESSOR DE EDUCAÇÃO BASICA I- B  PRO-T",
+          "valor_vantagem": "4.798,7",
+          "data_admissao": "01/03/2024",
+          "matricula": "000000020001764",
+          "ano_mes": "202404",
+          "meses": [
+            "202403",
+            "202404",
+            "202405"
+          ],
+          "admissoes": [
+            "01/03/2024"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.418.124-**",
+          "nome_servidor": "MARIA JOSE DE ABRANTES",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000363 - PROFESSOR DE EDUCAÇÃO BASICA I - A        PRO- T",
+          "valor_vantagem": "5.384",
+          "data_admissao": "01/09/2025",
+          "matricula": "000000020002056",
+          "ano_mes": "202509",
+          "meses": [
+            "202509",
+            "202510",
+            "202511"
+          ],
+          "admissoes": [
+            "01/09/2025"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "18",
+      "cargo": "Professor de Educação Básica II",
+      "vagasEdital": 7,
+      "totalLei": 17,
+      "ocupadosAntes": 5,
+      "nEfetivos": 0,
+      "cargosVagos": 17,
+      "vagasDisponiveis": 17,
+      "nEIP": 2,
+      "eipIrregulares": 2,
+      "eipExcedentes": 0,
+      "preteridos": 2,
+      "marcoNome": null,
+      "marcoData": null,
+      "status": "critico",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.480.894-**",
+          "nome_servidor": "NATALIA ROQUE GADELHA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000604 - PROFESSOR DE EDUCAÇÃO BASICA I- B  PRO-T",
+          "valor_vantagem": "4.798,7",
+          "data_admissao": "01/03/2024",
+          "matricula": "000000020001764",
+          "ano_mes": "202404",
+          "meses": [
+            "202403",
+            "202404",
+            "202405"
+          ],
+          "admissoes": [
+            "01/03/2024"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.418.124-**",
+          "nome_servidor": "MARIA JOSE DE ABRANTES",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000363 - PROFESSOR DE EDUCAÇÃO BASICA I - A        PRO- T",
+          "valor_vantagem": "5.384",
+          "data_admissao": "01/09/2025",
+          "matricula": "000000020002056",
+          "ano_mes": "202509",
+          "meses": [
+            "202509",
+            "202510",
+            "202511"
+          ],
+          "admissoes": [
+            "01/09/2025"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "15",
+      "cargo": "Psicopedagogo",
+      "vagasEdital": 1,
+      "totalLei": 3,
+      "ocupadosAntes": 0,
+      "nEfetivos": 1,
+      "cargosVagos": 2,
+      "vagasDisponiveis": 2,
+      "nEIP": 1,
+      "eipIrregulares": 1,
+      "eipExcedentes": 0,
+      "preteridos": 1,
+      "marcoNome": "FRANCISCO PORDEUS DA SILVA NETO",
+      "marcoData": "2024-04-22T03:00:00.000Z",
+      "status": "critico",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.936.924-**",
+          "nome_servidor": "MARIA GEISA SARMENTO FERREIRA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000612 - PSICOPEDAGOGA CAPS",
+          "valor_vantagem": "3.000",
+          "data_admissao": "01/03/2024",
+          "matricula": "000000020001765",
+          "ano_mes": "202404",
+          "meses": [
+            "202403",
+            "202404",
+            "202405",
+            "202406",
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412",
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "01/03/2024",
+            "02/01/2025",
+            "02/01/2026"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "11",
+      "cargo": "Psicólogo",
+      "vagasEdital": 1,
+      "totalLei": 2,
+      "ocupadosAntes": 0,
+      "nEfetivos": 3,
+      "cargosVagos": 0,
+      "vagasDisponiveis": 0,
+      "nEIP": 3,
+      "eipIrregulares": 0,
+      "eipExcedentes": 3,
+      "preteridos": 0,
+      "marcoNome": "WILTON ABRANTES SARMENTO",
+      "marcoData": "2024-06-20T03:00:00.000Z",
+      "status": "atencao",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.893.634-**",
+          "nome_servidor": "AYRTON GONÇALVES QUEIROGA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000022 - PSICOLOGO",
+          "valor_vantagem": "1.500",
+          "data_admissao": "01/04/2024",
+          "matricula": "000000020001816",
+          "ano_mes": "202405",
+          "meses": [
+            "202404",
+            "202405",
+            "202406",
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412",
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "01/04/2024",
+            "01/07/2024",
+            "02/01/2025",
+            "02/01/2026"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.457.374-**",
+          "nome_servidor": "JESSIKA GOMES DE ABRANTES",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000022 - PSICOLOGO",
+          "valor_vantagem": "1.500",
+          "data_admissao": "01/04/2024",
+          "matricula": "000000020001813",
+          "ano_mes": "202405",
+          "meses": [
+            "202404",
+            "202405",
+            "202406",
+            "202407",
+            "202408",
+            "202409",
+            "202410",
+            "202411",
+            "202412"
+          ],
+          "admissoes": [
+            "01/04/2024"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.745.384-**",
+          "nome_servidor": "YORRANA FERNANDES FIGUEIREDO",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000022 - PSICOLOGO",
+          "valor_vantagem": "1.648",
+          "data_admissao": "12/05/2025",
+          "matricula": "000000020002044",
+          "ano_mes": "202508",
+          "meses": [
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "12/05/2025",
+            "02/01/2026"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "04",
+      "cargo": "Técnico em Enfermagem (Plantonista)",
+      "vagasEdital": 1,
+      "totalLei": 12,
+      "ocupadosAntes": 0,
+      "nEfetivos": 6,
+      "cargosVagos": 6,
+      "vagasDisponiveis": 6,
+      "nEIP": 2,
+      "eipIrregulares": 2,
+      "eipExcedentes": 0,
+      "preteridos": 2,
+      "marcoNome": "FRANCISCA DAS CHAGAS SILVA FILHA",
+      "marcoData": "2025-03-01T03:00:00.000Z",
+      "status": "critico",
+      "servidoresEIP": [
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.701.704-**",
+          "nome_servidor": "ELIENE CARLOS DANTAS DA SILVA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000195 - TECNICO EM ENFERMAGEM",
+          "valor_vantagem": "3.128,73",
+          "data_admissao": "02/01/2025",
+          "matricula": "000000020001943",
+          "ano_mes": "202502",
+          "meses": [
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "02/01/2025",
+            "02/01/2026"
+          ]
+        },
+        {
+          "nome_municipio": "Lastro",
+          "codigo_unidade_gestora": "201104",
+          "descricao_unidade_gestora": "Prefeitura Municipal de Lastro",
+          "cpf_cnpj": "***.985.144-**",
+          "nome_servidor": "MARIA JOSE DE PAZ SOUSA",
+          "tipo_cargo": "Contratação por excepcional interesse público",
+          "descricao_cargo": "20000195 - TECNICO EM ENFERMAGEM",
+          "valor_vantagem": "3.022,73",
+          "data_admissao": "02/01/2025",
+          "matricula": "000000020001942",
+          "ano_mes": "202511",
+          "meses": [
+            "202501",
+            "202502",
+            "202503",
+            "202504",
+            "202505",
+            "202506",
+            "202507",
+            "202508",
+            "202509",
+            "202510",
+            "202511",
+            "202601"
+          ],
+          "admissoes": [
+            "02/01/2025",
+            "02/01/2026"
+          ]
+        }
+      ]
+    }
+  ],
   "preteridosNominais": [],
   "resultadoConcurso": [],
   "indicios": [
