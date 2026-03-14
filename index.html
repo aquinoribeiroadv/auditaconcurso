@@ -689,11 +689,13 @@ window.__AC_SOURCE__ = null; // será preenchido após DOMContentLoaded
   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
     <div style="min-width:0;flex:1;">
       <h1 style="font-size:1.1rem;">⚖️ AuditaConcurso</h1>
-      <p style="font-size:0.68rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Auditoria de Preterição — TCE-PB</p>
+      <p style="font-size:0.68rem;opacity:0.75;">Auditoria de Preterição — TCE-PB</p>
     </div>
     <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
-      <button onclick="abrirModalGithub()" id="btnGH" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:20px;width:36px;height:36px;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;">⚙️</button>
-      <button onclick="toggleBanco()" style="background:white;border:none;color:#1a3a1a;border-radius:20px;padding:8px 14px;font-size:0.75rem;font-weight:800;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,0.2);">🗄️ Auditados</button>
+      <button onclick="abrirModalGithub()" id="btnGH" title="Configurar GitHub"
+        style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:20px;width:36px;height:36px;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">⚙️</button>
+      <button onclick="toggleBanco()"
+        style="background:white;border:none;color:#1a3a1a;border-radius:20px;padding:8px 14px;font-size:0.75rem;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">🗄️ Auditados</button>
     </div>
   </div>
 </header>
@@ -2769,16 +2771,14 @@ async function _commitAuditoria() {
     const slug = orgaoSlug(state.orgao);
     const pasta = `dados/${slug}`;
 
-    // 1. Salvar auditoria.json com todos os dados computados
-    const registro = _buildRegistro();
-    // Arquivos brutos excluídos do JSON (estão separados no repo)
-    const regSemArquivos = { ...registro };
-    delete regSemArquivos.arquivos;
-    await _ghPut(`${pasta}/auditoria.json`, JSON.stringify(regSemArquivos, null, 2),
-      `Auto-save: ${state.orgao} - ${new Date().toLocaleString('pt-BR')}`);
-
-    // 2. Salvar arquivos brutos se existirem e ainda não enviados
+    // 1. Salvar arquivos brutos primeiro (para que _ghSalvo fique true)
     await _commitArquivos(pasta);
+
+    // 2. Salvar auditoria.json com TUDO incluindo arquivos
+    const registro = _buildRegistro();
+    await _ghPut(`${pasta}/auditoria.json`,
+      JSON.stringify(registro, null, 2),
+      `Auto-save: ${state.orgao} - ${new Date().toLocaleString('pt-BR')}`);
 
     // 3. Atualizar banco local
     _salvarBancoLocal(registro);
@@ -2786,13 +2786,14 @@ async function _commitAuditoria() {
     // 4. Atualizar banco.json global no repo
     const banco = getBanco();
     const resumos = banco.map(b => ({
-      id: b.id, orgao: b.orgao, slug: orgaoSlug(b.orgao),
+      id: b.id, orgao: b.orgao, slug: b.slug || orgaoSlug(b.orgao),
       dataInicio: b.dataInicio, dataFim: b.dataFim,
-      salvoEm: b.salvoEm, totalPreteridos: b.totalPreteridos,
+      salvoEm: b.salvoEm,
+      totalPreteridos: b.totalPreteridos,
       totalIrregulares: b.totalIrregulares,
     }));
     await _ghPut('dados/banco.json', JSON.stringify(resumos, null, 2),
-      `Índice atualizado: ${new Date().toLocaleString('pt-BR')}`);
+      `Índice: ${new Date().toLocaleString('pt-BR')}`);
 
     _mostrarStatusSync('✅ Salvo no GitHub');
   } catch(e) {
@@ -2844,41 +2845,45 @@ function _mostrarStatusSync(msg) {
 
 // ── Inicialização: carrega banco do GitHub ─────────────────────
 async function _inicializarDados() {
-  // Primeiro: carregar banco local imediatamente
-  // Depois: sincronizar com GitHub em background
   if (!getGHToken()) return;
   try {
+    const headers = { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' };
+
+    // Carregar índice do GitHub
     const res = await fetch(
-      `https://api.github.com/repos/${GH_REPO}/contents/dados/banco.json?ref=${GH_BRANCH}`,
-      { headers: { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' } }
+      `https://api.github.com/repos/${GH_REPO}/contents/dados/banco.json?ref=${GH_BRANCH}&t=${Date.now()}`,
+      { headers }
     );
     if (!res.ok) return;
     const data = await res.json();
     const resumos = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
 
-    // Para cada resumo, tentar carregar auditoria.json completa
-    const bancoLocal = getBanco();
-    const bancoMap = new Map(bancoLocal.map(b => [b.id, b]));
-
+    // Para cada resumo no GitHub, carregar auditoria.json completa
+    const bancoAtualizado = [];
     for (const r of resumos) {
-      if (!bancoMap.has(r.id)) {
-        // Carregar auditoria completa do GitHub
-        try {
-          const ar = await fetch(
-            `https://api.github.com/repos/${GH_REPO}/contents/dados/${r.slug}/auditoria.json?ref=${GH_BRANCH}`,
-            { headers: { 'Authorization': `token ${getGHToken()}`, 'Accept': 'application/vnd.github.v3+json' } }
-          );
-          if (ar.ok) {
-            const ad = await ar.json();
-            const auditoria = JSON.parse(decodeURIComponent(escape(atob(ad.content.replace(/\n/g,'')))));
-            bancoMap.set(auditoria.id, auditoria);
-          }
-        } catch {}
-      }
+      try {
+        const ar = await fetch(
+          `https://api.github.com/repos/${GH_REPO}/contents/dados/${r.slug}/auditoria.json?ref=${GH_BRANCH}&t=${Date.now()}`,
+          { headers }
+        );
+        if (ar.ok) {
+          const ad = await ar.json();
+          const auditoria = JSON.parse(decodeURIComponent(escape(atob(ad.content.replace(/\n/g,'')))));
+          // Garantir slug
+          auditoria.slug = auditoria.slug || r.slug || orgaoSlug(auditoria.orgao);
+          bancoAtualizado.push(auditoria);
+        } else {
+          // Usar resumo se auditoria.json não encontrada
+          bancoAtualizado.push(r);
+        }
+      } catch { bancoAtualizado.push(r); }
     }
-    setBanco([...bancoMap.values()].sort((a,b) => b.id - a.id));
-    renderHub();
-    _mostrarStatusSync('☁️ Sincronizado com GitHub');
+
+    if (bancoAtualizado.length) {
+      setBanco(bancoAtualizado.sort((a, b) => b.id - a.id));
+      renderHub();
+      _mostrarStatusSync(`☁️ ${bancoAtualizado.length} auditoria${bancoAtualizado.length !== 1 ? 's' : ''} sincronizada${bancoAtualizado.length !== 1 ? 's' : ''}`);
+    }
   } catch(e) { console.warn('Init GitHub:', e); }
 }
 
@@ -3119,17 +3124,17 @@ async function carregarResultado(id) {
     )].filter(Boolean).sort();
   }
 
-  const elOrgao = document.getElementById('orgaoInput');
+  const elOrgao = document.getElementById('orgao');
   if (elOrgao) elOrgao.value = state.orgao;
-  const elInicio = document.getElementById('dataInicioInput');
+  const elInicio = document.getElementById('dataInicio');
   if (elInicio) elInicio.value = state.dataInicio.toISOString().slice(0,10);
   const hoje_ = new Date(); hoje_.setHours(0,0,0,0);
   const dataFimD = new Date(state.dataFim); dataFimD.setHours(0,0,0,0);
   const aindaValido = dataFimD.getTime() === hoje_.getTime();
   const chk = document.getElementById('concursoValido');
   if (chk) { chk.checked = aindaValido; toggleConcursoValido(); }
-  const elFim = document.getElementById('dataFimInput');
-  if (elFim && !aindaValido) elFim.value = state.dataFim.toISOString().slice(0,10);
+  const elFim = document.getElementById('dataFim');
+  if (elFim && !aindaValido) { elFim.disabled = false; elFim.value = state.dataFim.toISOString().slice(0,10); }
 
   const arq = state.arquivos;
   const z1 = document.getElementById('zone1');
