@@ -3284,6 +3284,88 @@ function novoAuditoria() {
   showToast('🆕 Nova auditoria iniciada!');
 }
 
+// ===================== MODAL PRETERIDO =====================
+let _modalKey = null;
+
+function abrirModalPreterido(mapKey) {
+  const pret = _preteridosMap.get(mapKey);
+  if (!pret) return;
+  _modalKey = `${state.orgao}||${mapKey}`;
+
+  document.getElementById('modalNome').textContent = pret.nome || '—';
+  document.getElementById('modalCargo').textContent = pret.cargo || '—';
+  document.getElementById('modalColocacao').textContent = `${pret.colocacao}º colocado`;
+  document.getElementById('modalNota').textContent = pret.notaFinal ?? '—';
+  document.getElementById('modalStatus').textContent = pret.status || '—';
+  document.getElementById('modalInscricao').textContent = pret.inscricao || '—';
+
+  const cpfVal = pret.cpf && !pret.cpf.startsWith('000') && pret.cpf !== '' ? pret.cpf : '(não disponível)';
+  document.getElementById('modalCpf').textContent = cpfVal;
+  const nascVal = pret.dataNasc && !pret.dataNasc.includes('1000') && pret.dataNasc !== '' ? pret.dataNasc : '(não disponível)';
+  document.getElementById('modalNasc').textContent = nascVal;
+
+  // Carregar contato salvo
+  const contatos = getContatos();
+  const salvo = contatos[_modalKey] || {};
+  document.getElementById('modalDdd').value = salvo.ddd || '';
+  document.getElementById('modalCelular').value = salvo.celular || '';
+  document.getElementById('modalAnotacoes').value = salvo.anotacoes || '';
+
+  document.getElementById('modalPreterido').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function fecharModal() {
+  document.getElementById('modalPreterido').style.display = 'none';
+  document.body.style.overflow = '';
+  _modalKey = null;
+}
+
+function salvarContato() {
+  if (!_modalKey) return;
+  const ddd      = document.getElementById('modalDdd').value.trim();
+  const celular  = document.getElementById('modalCelular').value.trim();
+  const anotacoes= document.getElementById('modalAnotacoes').value.trim();
+
+  if (celular && celular.length !== 9) { showToast('⚠️ Celular deve ter 9 dígitos'); return; }
+  if (ddd && ddd.length !== 2)         { showToast('⚠️ DDD deve ter 2 dígitos'); return; }
+
+  const contatos = getContatos();
+  contatos[_modalKey] = { ddd, celular, anotacoes, nome: document.getElementById('modalNome').textContent };
+  saveContatos(contatos);
+  showToast('✅ Contato salvo!');
+  autoSave();
+}
+
+function copiarCpf() {
+  const cpf = document.getElementById('modalCpf').textContent;
+  if (!cpf || cpf === '(não disponível)') { showToast('⚠️ CPF não disponível'); return; }
+  navigator.clipboard.writeText(cpf)
+    .then(() => showToast('📋 CPF copiado!'))
+    .catch(() => {
+      const el = document.createElement('textarea');
+      el.value = cpf; document.body.appendChild(el);
+      el.select(); document.execCommand('copy'); document.body.removeChild(el);
+      showToast('📋 CPF copiado!');
+    });
+}
+
+function abrirWhatsApp() {
+  const ddd = document.getElementById('modalDdd').value.trim();
+  const cel = document.getElementById('modalCelular').value.trim();
+  if (!ddd || !cel) { showToast('⚠️ Informe DDD e celular'); return; }
+  if (ddd.length !== 2 || cel.length !== 9) { showToast('⚠️ DDD (2 dígitos) e celular (9 dígitos)'); return; }
+  const nome  = document.getElementById('modalNome').textContent.split(' ')[0];
+  const cargo = document.getElementById('modalCargo').textContent;
+  const msg   = encodeURIComponent(`Olá, ${nome}! Entramos em contato sobre o concurso público para ${cargo} — ${state.orgao}.`);
+  window.open(`https://wa.me/55${ddd}${cel}?text=${msg}`, '_blank');
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modalPreterido').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
 // ===================== GITHUB CONFIG MODAL =====================
 function abrirModalGithub() {
   const modal = document.getElementById('modalGithub');
