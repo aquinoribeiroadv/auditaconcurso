@@ -4,7 +4,7 @@
   "orgao": "Prefeitura Municipal de Lastro",
   "dataInicio": "2024-02-27T00:00:00.000Z",
   "dataFim": "2026-03-15T03:00:00.000Z",
-  "salvoEm": "2026-03-15T03:08:56.127Z",
+  "salvoEm": "2026-03-15T04:42:21.564Z",
   "totalCargos": 4,
   "totalIrregulares": 8,
   "totalPreteridos": 8,
@@ -12815,7 +12815,14 @@
       ]
     }
   ],
-  "contatos": {},
+  "contatos": {
+    "Prefeitura Municipal de Lastro||Agente Comunitário de Saúde||5": {
+      "ddd": "83",
+      "celular": "988077448",
+      "anotacoes": "",
+      "nome": "REBEKA KAROLINE MARQUES DE MEDEIROS"
+    }
+  },
   "arquivosMeta": {
     "vagasConcurso": {
       "nome": "vagasCargoConcurso (9).xls"
