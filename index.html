@@ -1539,7 +1539,7 @@ function renderPreviewConcurso() {
   `;
 
   const lei = {};
-  state.vagasLei.forEach(r => lei[r.codigo] = r);
+  state.vagasLei.forEach(r => lei[String(parseInt(r.codigo)||0)] = r);
 
   // Cabeçalho fixo
   document.getElementById('tabelaConcursoHead').innerHTML = `<tr>
@@ -1551,7 +1551,7 @@ function renderPreviewConcurso() {
 
   let bodyHtml = '';
   state.vagasConcurso.forEach(r => {
-    const l = lei[r.codigo] || {};
+    const l = lei[String(parseInt(r.codigo)||0)] || {};
     bodyHtml += `<tr>
       <td style="max-width:180px;word-break:break-word;">${r.cargo}</td>
       <td class="num">${l.totalVagas || '-'}</td>
@@ -2058,12 +2058,14 @@ function processarAnaliseVagas() {
 
   const analise = [];
   const lei = {};
-  state.vagasLei.forEach(r => lei[r.codigo] = r);
+  // Normalizar código com parseInt para evitar mismatch "01" vs "1"
+  state.vagasLei.forEach(r => lei[String(parseInt(r.codigo)||0)] = r);
 
   state.vagasConcurso.forEach(cargo => {
-    const folhaCargos = state.correspondencia[cargo.codigo] || [];
+    const codigoNorm = String(parseInt(cargo.codigo)||0);
+    const folhaCargos = state.correspondencia[cargo.codigo] || state.correspondencia[codigoNorm] || [];
     if (!folhaCargos.length) return;
-    const leiCargo = lei[cargo.codigo] || {};
+    const leiCargo = lei[codigoNorm] || {};
 
     const nomesCorrespondencia = new Set(
       folhaCargos.map(c => normNomeCargo(extrairNomeCargo(c)))
@@ -2585,7 +2587,7 @@ function exportarRelatorio() {
 
     // ABA 1 — Dados do Concurso
     const lei = {};
-    state.vagasLei.forEach(r => lei[r.codigo] = r);
+    state.vagasLei.forEach(r => lei[String(parseInt(r.codigo)||0)] = r);
     const aba1 = [
       ['AUDITORIA DE PRETERIÇÃO — DADOS DO CONCURSO'],
       [''],
@@ -2596,7 +2598,7 @@ function exportarRelatorio() {
       ['CARGO', 'VAGAS EDITAL', 'VAGAS PCD', 'VAGAS COTAS', 'CAD. RESERVA', 'TOTAL EDITAL', 'VAGAS NA LEI', 'OCUPADOS ANTES', 'DISPONÍVEIS'],
     ];
     state.vagasConcurso.forEach(c => {
-      const l = lei[c.codigo] || {};
+      const l = lei[String(parseInt(c.codigo)||0)] || {};
       aba1.push([c.cargo, c.vagasOferec, c.vagasPCD, c.vagasCotas, c.cadastroReserva, c.totalVagas, l.totalVagas||0, l.ocupadosAntes||0, l.disponiveis||0]);
     });
     XLSX.utils.book_append_sheet(wb, autoWidth(XLSX.utils.aoa_to_sheet(aba1), aba1), 'Dados do Concurso');
